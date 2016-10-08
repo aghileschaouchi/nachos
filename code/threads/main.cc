@@ -21,14 +21,15 @@
 
 #ifdef USER_PROGRAM
 #include "progtest.h"
+#include "synchconsole.h"
 #endif
 
 
 // External functions used by this file
 
-extern void ThreadTest (void), Copy (char *unixFile, char *nachosFile);
-extern void Print (char *file), PerformanceTest (void);
-extern void MailTest (int networkID);
+extern void ThreadTest(void), Copy(char *unixFile, char *nachosFile);
+extern void Print(char *file), PerformanceTest(void);
+extern void MailTest(int networkID);
 
 //----------------------------------------------------------------------
 // main
@@ -45,138 +46,136 @@ extern void MailTest (int networkID);
 //----------------------------------------------------------------------
 
 int
-main (int argc, char **argv)
-{
-    int argCount;		// the number of arguments 
+main(int argc, char **argv) {
+    int argCount; // the number of arguments 
     // for a particular command
 
-    if (argc > 1 && !strcmp (argv[1], "-h")) // print help
-      {
-//  NOTE -- flags are ignored until the relevant assignment.
-//  Some of the flags are interpreted here; some in system.cc.
-//
-	printf (
-"Usage: nachos -d <debugflags> -rs <random seed #> -z -h\n"
+    if (argc > 1 && !strcmp(argv[1], "-h")) // print help
+    {
+        //  NOTE -- flags are ignored until the relevant assignment.
+        //  Some of the flags are interpreted here; some in system.cc.
+        //
+        printf(
+                "Usage: nachos -d <debugflags> -rs <random seed #> -z -h\n"
 #ifdef USER_PROGRAM
-"       -s -x <nachos file> -c <consoleIn> <consoleOut>\n"
+                "       -s -x <nachos file> -c <consoleIn> <consoleOut>\n"
 #endif
 #ifdef FILESYS
-"       -f -cp <unix file> <nachos file>\n"
-"       -p <nachos file> -r <nachos file> -l -D -t\n"
+                "       -f -cp <unix file> <nachos file>\n"
+                "       -p <nachos file> -r <nachos file> -l -D -t\n"
 #endif
 #ifdef NETWORK
-"       -n <network reliability> -m <machine id>\n"
-"       -o <other machine id>\n"
+                "       -n <network reliability> -m <machine id>\n"
+                "       -o <other machine id>\n"
 #endif
-"\n"
-"-d causes certain debugging messages to be printed (cf. utility.h)\n"
-"-rs causes Yield to occur at random (but repeatable) spots\n"
-"-z prints the copyright message\n"
-"-h prints some help about options\n"
-"\n"
+                "\n"
+                "-d causes certain debugging messages to be printed (cf. utility.h)\n"
+                "-rs causes Yield to occur at random (but repeatable) spots\n"
+                "-z prints the copyright message\n"
+                "-h prints some help about options\n"
+                "\n"
 #ifdef USER_PROGRAM
-"USER_PROGRAM\n"
-"-s causes user programs to be executed in single-step mode\n"
-"-x runs a user program\n"
-"-c tests the console\n"
+                "USER_PROGRAM\n"
+                "-s causes user programs to be executed in single-step mode\n"
+                "-x runs a user program\n"
+                "-c tests the console\n"
 #endif
 #ifdef FILESYS
-"FILESYS\n"
-"-f causes the physical disk to be formatted\n"
-"-cp copies a file from UNIX to Nachos\n"
-"-p prints a Nachos file to stdout\n"
-"-r removes a Nachos file from the file system\n"
-"-l lists the contents of the Nachos directory\n"
-"-D prints the contents of the entire file system\n"
-"-t tests the performance of the Nachos file system\n"
+                "FILESYS\n"
+                "-f causes the physical disk to be formatted\n"
+                "-cp copies a file from UNIX to Nachos\n"
+                "-p prints a Nachos file to stdout\n"
+                "-r removes a Nachos file from the file system\n"
+                "-l lists the contents of the Nachos directory\n"
+                "-D prints the contents of the entire file system\n"
+                "-t tests the performance of the Nachos file system\n"
 #endif
 #ifdef NETWORK
-"NETWORK\n"
-"-n sets the network reliability\n"
-"-m sets this machine's host id (needed for the network)\n"
-"-o runs a simple test of the Nachos network software"
+                "NETWORK\n"
+                "-n sets the network reliability\n"
+                "-m sets this machine's host id (needed for the network)\n"
+                "-o runs a simple test of the Nachos network software"
 #endif
-	);
-	return (0);
-      }
+                );
+        return (0);
+    }
 
-    DEBUG ('t', "Entering main");
-    (void) Initialize (argc, argv);
+    DEBUG('t', "Entering main");
+    (void) Initialize(argc, argv);
 
 #ifdef THREADS
-    ThreadTest ();
+    ThreadTest();
 #endif
 
-    for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount)
-      {
-	  argCount = 1;
-	  if (!strcmp (*argv, "-z"))	// print copyright
-	      printf ("%s", copyright);
+    for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount) {
+        argCount = 1;
+        if (!strcmp(*argv, "-z")) // print copyright
+            printf("%s", copyright);
 #ifdef USER_PROGRAM
-	  if (!strcmp (*argv, "-x"))
-	    {			// run a user program
-		ASSERT (argc > 1);
-		StartProcess (*(argv + 1));
-		argCount = 2;
-	    }
-	  else if (!strcmp (*argv, "-c"))
-	    {			// test the console
-		if (argc == 1)
-		    ConsoleTest (NULL, NULL);
-		else
-		  {
-		      ASSERT (argc > 2);
-		      ConsoleTest (*(argv + 1), *(argv + 2));
-		      argCount = 3;
-		  }
-	    }
+        if (!strcmp(*argv, "-x")) { // run a user program
+            ASSERT(argc > 1);
+#ifdef CHANGED
+            synchconsole = new SynchConsole(NULL, NULL);
+#endif // CHANGED
+            StartProcess(*(argv + 1));
+            argCount = 2;
+        } else if (!strcmp(*argv, "-c")) { // test the console
+            if (argc == 1)
+                ConsoleTest(NULL, NULL);
+            else {
+                ASSERT(argc > 2);
+                ConsoleTest(*(argv + 1), *(argv + 2));
+                argCount = 3;
+            }
+        }
+#ifdef CHANGED
+            //Pour pouvoir compiler, il faut ajouter la déclaration de 
+            //SynchConsoleTest() au progtest.h
+        else if (!strcmp(*argv, "-sc")) { // test the console
+            if (argc == 1)
+                SynchConsoleTest(NULL, NULL);
+            else {
+                ASSERT(argc > 2);
+                SynchConsoleTest(*(argv + 1), *(argv + 2));
+                argCount = 3;
+            }
+        }
+#endif // CHANGED
 #endif // USER_PROGRAM
 #ifdef FILESYS
-	  if (!strcmp (*argv, "-cp"))
-	    {			// copy from UNIX to Nachos
-		ASSERT (argc > 2);
-		Copy (*(argv + 1), *(argv + 2));
-		argCount = 3;
-	    }
-	  else if (!strcmp (*argv, "-p"))
-	    {			// print a Nachos file
-		ASSERT (argc > 1);
-		Print (*(argv + 1));
-		argCount = 2;
-	    }
-	  else if (!strcmp (*argv, "-r"))
-	    {			// remove Nachos file
-		ASSERT (argc > 1);
-		fileSystem->Remove (*(argv + 1));
-		argCount = 2;
-	    }
-	  else if (!strcmp (*argv, "-l"))
-	    {			// list Nachos directory
-		fileSystem->List ();
-	    }
-	  else if (!strcmp (*argv, "-D"))
-	    {			// print entire filesystem
-		fileSystem->Print ();
-	    }
-	  else if (!strcmp (*argv, "-t"))
-	    {			// performance test
-		PerformanceTest ();
-	    }
+        if (!strcmp(*argv, "-cp")) { // copy from UNIX to Nachos
+            ASSERT(argc > 2);
+            Copy(*(argv + 1), *(argv + 2));
+            argCount = 3;
+        } else if (!strcmp(*argv, "-p")) { // print a Nachos file
+            ASSERT(argc > 1);
+            Print(*(argv + 1));
+            argCount = 2;
+        } else if (!strcmp(*argv, "-r")) { // remove Nachos file
+            ASSERT(argc > 1);
+            fileSystem->Remove(*(argv + 1));
+            argCount = 2;
+        } else if (!strcmp(*argv, "-l")) { // list Nachos directory
+            fileSystem->List();
+        } else if (!strcmp(*argv, "-D")) { // print entire filesystem
+            fileSystem->Print();
+        } else if (!strcmp(*argv, "-t")) { // performance test
+            PerformanceTest();
+        }
 #endif // FILESYS
 #ifdef NETWORK
-	  if (!strcmp (*argv, "-o"))
-	    {
-		ASSERT (argc > 1);
-		Delay (2);	// delay for 2 seconds
-		// to give the user time to 
-		// start up another nachos
-		MailTest (atoi (*(argv + 1)));
-		argCount = 2;
-	    }
+        if (!strcmp(*argv, "-o")) {
+            ASSERT(argc > 1);
+            Delay(2); // delay for 2 seconds
+            // to give the user time to 
+            // start up another nachos
+            MailTest(atoi(*(argv + 1)));
+            argCount = 2;
+        }
 #endif // NETWORK
-      }
+    }
 
-    currentThread->Finish ();	// NOTE: if the procedure "main" 
+    currentThread->Finish(); // NOTE: if the procedure "main" 
     // returns, then the program "nachos"
     // will exit (as any other normal program
     // would).  But there may be other
@@ -184,5 +183,5 @@ main (int argc, char **argv)
     // to those threads by saying that the
     // "main" thread is finished, preventing
     // it from returning.
-    return (0);			// Not reached...
+    return (0); // Not reached...
 }

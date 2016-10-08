@@ -49,4 +49,13 @@ extern SynchDisk *synchDisk;
 extern PostOffice *postOffice;
 #endif
 
+#ifdef CHANGED
+#define MAX_STRING_SIZE 32
+extern int copyStringFromMachine(int from, char *to, unsigned size);
+#ifdef USER_PROGRAM
+#include "synchconsole.h"
+extern SynchConsole *synchconsole;
+#endif
+#endif //CHANGED
+
 #endif // SYSTEM_H

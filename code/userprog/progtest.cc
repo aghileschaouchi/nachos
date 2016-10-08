@@ -13,6 +13,7 @@
 #include "console.h"
 #include "addrspace.h"
 #include "synch.h"
+#include "synchconsole.h"
 
 //----------------------------------------------------------------------
 // StartProcess
@@ -21,26 +22,24 @@
 //----------------------------------------------------------------------
 
 void
-StartProcess (char *filename)
-{
-    OpenFile *executable = fileSystem->Open (filename);
+StartProcess(char *filename) {
+    OpenFile *executable = fileSystem->Open(filename);
     AddrSpace *space;
 
-    if (executable == NULL)
-      {
-	  printf ("Unable to open file %s\n", filename);
-	  return;
-      }
-    space = new AddrSpace (executable);
+    if (executable == NULL) {
+        printf("Unable to open file %s\n", filename);
+        return;
+    }
+    space = new AddrSpace(executable);
     currentThread->space = space;
 
-    delete executable;		// close file
+    delete executable; // close file
 
-    space->InitRegisters ();	// set the initial register values
-    space->RestoreState ();	// load page table register
+    space->InitRegisters(); // set the initial register values
+    space->RestoreState(); // load page table register
 
-    machine->Run ();		// jump to the user progam
-    ASSERT (FALSE);		// machine->Run never returns;
+    machine->Run(); // jump to the user progam
+    ASSERT(FALSE); // machine->Run never returns;
     // the address space exits
     // by doing the syscall "exit"
 }
@@ -58,16 +57,15 @@ static Semaphore *writeDone;
 //----------------------------------------------------------------------
 
 static void
-ReadAvailHandler (void *arg)
-{
+ReadAvailHandler(void *arg) {
     (void) arg;
-    readAvail->V ();
+    readAvail->V();
 }
+
 static void
-WriteDoneHandler (void *arg)
-{
+WriteDoneHandler(void *arg) {
     (void) arg;
-    writeDone->V ();
+    writeDone->V();
 }
 
 //----------------------------------------------------------------------
@@ -77,26 +75,59 @@ WriteDoneHandler (void *arg)
 //----------------------------------------------------------------------
 
 void
-ConsoleTest (const char *in, const char *out)
-{
+ConsoleTest(const char *in, const char *out) {
     char ch;
 
-    readAvail = new Semaphore ("read avail", 0);
-    writeDone = new Semaphore ("write done", 0);
-    console = new Console (in, out, ReadAvailHandler, WriteDoneHandler, 0);
+    readAvail = new Semaphore("read avail", 0);
+    writeDone = new Semaphore("write done", 0);
+    console = new Console(in, out, ReadAvailHandler, WriteDoneHandler, 0);
 
-    for (;;)
-      {
-	  readAvail->P ();	// wait for character to arrive
-	  ch = console->GetChar ();
-	  console->PutChar (ch);	// echo it!
-	  writeDone->P ();	// wait for write to finish
-	  if (ch == 'q') {
-	      printf ("Nothing more, bye!\n");
-	      break;		// if q, quit
-	  }
-      }
+    for (;;) {
+        readAvail->P(); // wait for character to arrive
+        ch = console->GetChar();
+
+#ifdef CHANGED
+        if (ch == EOF) {
+            //on écrit pas EOF
+            printf("Au revoir\n");
+            break;
+        }
+#endif // CHANGED
+
+#ifdef CHANGED
+        console->PutChar('<'); // echo it!
+        writeDone->P(); // wait for write to finish
+        console->PutChar(ch); // echo it!
+        writeDone->P(); // wait for write to finish
+        console->PutChar('>'); // echo it!
+        writeDone->P(); // wait for write to finish
+#else
+        console->PutChar(ch); // echo it!
+        writeDone->P(); // wait for write to finish
+#endif // CHANGED
+
+        if (ch == 'q') {
+            printf("Nothing more, bye!\n");
+            break; // if q, quit
+        }
+    }
     delete console;
     delete readAvail;
     delete writeDone;
 }
+
+#ifdef CHANGED
+void
+SynchConsoleTest(const char *in, const char *out) {
+    char ch;
+    SynchConsole *test_synchconsole = new SynchConsole(in, out);
+    
+    while ((ch = test_synchconsole->SynchGetChar()) != EOF){
+        test_synchconsole->SynchPutChar('<');
+        test_synchconsole->SynchPutChar(ch);
+        test_synchconsole->SynchPutChar('>');
+    }
+    
+    fprintf(stderr, "EOF detected in SynchConsole!\n");
+}
+#endif //CHANGED
