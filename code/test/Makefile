@@ -17,18 +17,18 @@ NACHOS_ARCH := $(shell $(NACHOS_ROOT)/bin/nachos_arch)
 ifeq ($(NACHOS_SYS),SOLARIS_SYS)
 # Solaris/PC
 ifeq ($(NACHOS_ARCH),X86_ARCH)
-GCCDIR	= /opt/xgcc/decstation-ultrix/bin
+GCCDIR	= /net/cremi/aguermou/xgcc/decstation-ultrix/bin
 endif
 # Solaris/Sparc
 ifeq ($(NACHOS_ARCH),SPARC_ARCH)
-GCCDIR	= /opt/xgcc/decstation-ultrix/bin
+GCCDIR	= /net/cremi/aguermou/xgcc/decstation-ultrix/bin
 endif
 endif
 
 ifeq ($(NACHOS_SYS),LINUX_SYS)
 # Linux: fill in with the full path to the binutils and gcc.
 # For instance:
-GCCDIR	= /opt/xgcc/decstation-ultrix/bin
+GCCDIR	= /net/cremi/aguermou/xgcc/decstation-ultrix/bin
 endif
 
 ifeq ($(NACHOS_SYS),MAC_OS_SYS)
