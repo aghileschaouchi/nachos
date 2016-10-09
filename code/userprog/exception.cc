@@ -82,6 +82,15 @@ ExceptionHandler(ExceptionType which) {
                     break;
                 }
 #ifdef CHANGED
+                case SC_Exit:
+                {
+                    DEBUG('s', "Exit\n");
+                    //récupérer la valeur de retour stockée dans r4
+                    int n = machine->ReadRegister(4);
+                    printf("main() returned %d\n", n);
+                    interrupt -> Halt();
+                    break;
+                }
                 case SC_PutChar:
                 {
                     DEBUG('s', "PutChar\n");
@@ -103,8 +112,7 @@ ExceptionHandler(ExceptionType which) {
 
                     do {
                         //copier au plus MAX_STRING_SIZE - 1 caractères au buffer
-                        //On réserve la place pour le '\0'
-                        nb_read = copyStringFromMachine(from, buf, MAX_STRING_SIZE - 1);
+                        nb_read = copyStringFromMachine(from, buf, MAX_STRING_SIZE);
 
                         //afficher le contenu de buf
                         synchconsole->SynchPutString(buf);
@@ -116,6 +124,36 @@ ExceptionHandler(ExceptionType which) {
 
                     //libérer le buffer
                     free(buf);
+
+                    break;
+                }
+                case SC_GetChar:
+                {
+                    DEBUG('s', "GetChar\n");
+
+                    //récupérer le caractère
+                    int c;
+                    c = synchconsole->SynchGetChar();
+
+                    //stocker le dans r2 comme valeur retournée de la fonction
+                    machine->WriteRegister(2, c);
+
+                    break;
+                }
+                case SC_GetString:
+                {
+                    DEBUG('s', "GetString\n");
+
+                    //récupérer arg1 et arg2 de l'appel système
+                    int to = (int) machine -> ReadRegister(4);
+                    unsigned size = (unsigned) machine -> ReadRegister(5);
+
+                    //allocation de mémoire
+                    char *str = (char*) malloc(sizeof (char) * size);
+                    synchconsole -> SynchGetString(str, size);
+
+                    copyStringToMachine(str, to, size);
+                    free(str);
 
                     break;
                 }
@@ -154,13 +192,13 @@ ExceptionHandler(ExceptionType which) {
  * La copie de la chaîne se termine toujours par '\0'
  * 
  * Note: la zone mémoire allouée pour 'to' doit permettre contenir au moins
- * (size + 1) caractères dont 1 caractère de plus pour '\0' au cas où 
- * (size) caractères sont écrits
+ * (size) caractères dont 1 caractère de plus pour le '\0' au cas où 
+ * (size - 1) caractères sont déjà écrits
  * 
  * @param from l'adresse virtuelle MIPS de la chaîne source
  * @param to l'adresse physique de la chaîne dest
- * @param size au plus size caractères doivent être écrits
- * @return nombre de caractères écrits ('\0' ne sera pas compté)
+ * @param size au plus size-1 caractères doivent être écrits
+ * @return nombre de caractères écrits (<= size - 1, '\0' ne sera pas compté)
  */
 int
 copyStringFromMachine(int from, char *to, unsigned size) {
@@ -168,8 +206,8 @@ copyStringFromMachine(int from, char *to, unsigned size) {
     int ch;
 
     while (1) {
-        //si (size) caractères son écrits: terminer la chaîne avec '\0' et sortir
-        if (i == size) {
+        //si (size - 1) caractères sont écrits: terminer la chaîne avec '\0' et sortir
+        if (i == size - 1) {
             to[i] = '\0';
             break;
         }
@@ -188,5 +226,48 @@ copyStringFromMachine(int from, char *to, unsigned size) {
 
     //retourner le nombre de caractères écrits
     return i;
+}
+
+/**
+ * Implementation d'une procédure similaire à fgets().
+ * La copie de la chaîne se termine toujours par '\0'
+ * 
+ * @param from l'adresse physique de la chaîne source
+ * @param to l'adresse virtuelle de la chaîne dest
+ * @param size au plus size-1 caractères doivent être lus
+ * @return nombre de caractères lus (<= size - 1, '\0' ne sera pas compté)
+ */
+int
+copyStringToMachine(char *from, int to, unsigned size) {
+    unsigned i = 0;
+    int ch;
+
+    while (1) {
+        //si (size - 1) caractères sont lus: terminer la chaîne avec '\0' et sortir
+        if (i == size - 1) {
+            machine->WriteMem(to + i, sizeof (char), '\0');
+            break;
+        }
+
+        //récupérer le caractère à from[i] et stocker à l'adresse (to+i)
+        ch = from[i];
+        machine->WriteMem(to + i, sizeof (char), ch);
+
+        //si le caractère récemment lu est '\0': on est à la fin de la chaîne d'entrée
+        if (ch == '\0')
+            break;
+
+        i++;
+
+        //si le caractère récemment lu est '\n': terminer la lecture
+        if (ch == '\n') {
+            machine->WriteMem(to + i, sizeof (char), '\0');
+            break;
+        }
+    }
+
+    //retourner le nombre de caractères lus
+    return i;
+
 }
 #endif //CHANGED

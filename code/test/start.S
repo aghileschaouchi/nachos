@@ -33,8 +33,8 @@
 	.ent	__start
 __start:
 	jal	main
-	move	$4,$0		
-	jal	Exit	 /* if we return from main, exit(0) */
+	move	$4,$2	 /* save the return value of main() in r4 */
+	jal	Exit	 /* this should be exit(*return value of main()*) */
 	.end __start
 
 /* -------------------------------------------------------------
@@ -57,7 +57,7 @@ __start:
  * 	convention on the MIPS.
  * -------------------------------------------------------------
  */
-
+#ifdef CHANGED
 	.globl PutChar
 	.ent	PutChar
 PutChar:
@@ -74,6 +74,23 @@ PutString:
 	j	$31
 	.end PutString
 
+	.globl GetChar
+	.ent	GetChar
+GetChar:
+	addiu $2,$0,SC_GetChar
+	syscall
+	j	$31
+	.end GetChar
+
+	.globl GetString
+	.ent	GetString
+GetString:
+	addiu $2,$0,SC_GetString
+	syscall
+	j	$31
+	.end GetString
+
+#endif // CHANGED
 	.globl Halt
 	.ent	Halt
 Halt:

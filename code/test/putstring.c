@@ -1,3 +1,4 @@
+#ifdef CHANGED
 #include <syscall.h>
 
 int main() {
@@ -5,3 +6,4 @@ int main() {
     PutString("123456789\n123456789\n123456789\n123456789\n123456789\n123456789\n");
     Halt();
 }
+#endif // CHANGED

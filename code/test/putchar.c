@@ -12,5 +12,9 @@ void print(char c, int n) {
 
 int main() {
     print('a', 4);
+#if CHANGED
+    return 14;
+#else
     Halt();
+#endif // CHANGED
 }
