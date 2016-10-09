@@ -157,6 +157,39 @@ ExceptionHandler(ExceptionType which) {
 
                     break;
                 }
+		case SC_PutInt:
+                {
+                    DEBUG('s', "PutInt\n");
+
+		    //récupérer l'entier (arg1 de la fonction PutInt) stocké dans r4
+                    int n = machine -> ReadRegister(4);
+		    char *buff = (char*)malloc(sizeof(char)*10);
+		    //la fonction 'snprintf' va écrire l'entier 'n' dans une chaine de caractére 'buff' qui sera afficher ensuite avec 'SynchPutString(buff)'
+                    snprintf(buff,10,"%d",n);
+		    //on affiche le contenue de buff (l'entier en question) avec un simple 'SynchPutString'
+		    synchconsole -> SynchPutString(buff);
+		    free(buff);
+
+                    break;
+                }
+                case SC_GetInt:
+                {
+                    DEBUG('s', "GetSInt\n");
+                    int n;
+		    //on recupére l'adresse virtuelle  ou écrire l'entier lu après
+		    int to =  machine -> ReadRegister(4);
+		    //on alloue une chaine de caractère pour y écrire l'entier après lecture de l'entrée standard
+		    char *from = (char*) malloc(sizeof(char) * 10);
+		    
+		    synchconsole -> SynchGetString(from, 10);
+		    //on transforme la chaine de caractére lu en entier
+		    sscanf(from, "%d", &n);
+		    //on ecris l'entier lu dans l'adresse virtuelle de la variable
+		    machine->WriteMem(to, sizeof(int), n);
+		    free(from);
+
+		    break;
+		}
 #endif // CHANGED
                 default:
                 {
