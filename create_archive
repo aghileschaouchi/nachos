@@ -1,0 +1,15 @@
+#!/bin/bash
+
+FILENAME=qnnguyen-achaouchi-nhouari-NTkxNGQ1MDMwMzJlMmU0Zjg4OTlkNGViYTliM2M5N2MgIC0K.tar.gz
+
+rm rapport.pdf
+cd rapport; make; cp $1 ../rapport.pdf; make clean; cd ../
+cd code; mv nbproject/ ../; make clean; cd ../
+tar czvf $FILENAME rapport.pdf code/
+chmod a+r $FILENAME
+chmod og-w $FILENAME
+#mv $FILENAME /net/stockage/aguermou/NACHOS/TP$2/G1
+
+mv nbproject/ code/
+rm rapport.pdf
+rm $FILENAME

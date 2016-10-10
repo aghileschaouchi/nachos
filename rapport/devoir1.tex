@@ -1,0 +1,93 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{fullpage}
+\usepackage[utf8]{inputenc}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage[french]{babel}
+\usepackage[cyr]{aeguill}
+
+\setlength{\parindent}{2em}
+\setlength{\parskip}{1em}
+
+\newcommand{\quotes}[1]{``#1''}
+
+\begin{document}
+
+\begin{titlepage}
+\centering
+{\scshape\LARGE Université de Bordeaux \par}
+{\scshape\Large Master 1 Informatique \par}
+\vspace{3cm}
+
+{\Huge\bfseries Devoir Système d'Exploitation \par}
+\vspace{0.5cm}
+{\Large\itshape Rapport 1: NACHOS Entrées/Sorties \par}
+
+\vfill
+réalisé par \par
+Quoc-Nghia \textsc{NGUYEN} \par
+Aghiles \textsc{CHAOUCHI} \par
+Nadhir \textsc{HOUARI} \par
+\vfill
+
+{\large 10 octobre 2016\par}
+
+\end{titlepage}
+
+\section{Bilan}
+Pour ce premier devoir, nous avons mis en place sous Nachos \quotes{un mécanisme d'entrée-sortie minimal} en implémentant:
+\begin{enumerate}
+\item Une couche d'entrées-sorties synchrones (SynchConsole) au-dessus de la couche Console avec les fonctions \textbf{SynchPutChar(int ch)}, \textbf{SynchGetChar()}, \textbf{SynchPutString(const char s[])}, \textbf{SynchGetString()} qui encapsulent tout le mécanisme des sémaphores.
+
+\item Les appels systèmes \textbf{PutChar(char c)}, \textbf{GetChar()}, \textbf{PutString(const char s[])}, \textbf{GetString(char *s, int n)}... qui permettent de passer l'exécution en mode noyau et profiter des fonctions d'entrée-sortie synchrones du SynchConsole.
+\end{enumerate}
+
+En suivant les indications du sujet et les documentations des fonctions similaires dans le monde Linux, nous avons enfin implémenté toutes les fonctionnalités mentionnées dans le sujet (sauf la $printf()$, car, franchement, nous n'arrivons pas à compiler NACHOS après l'ajout du vsprintf.c tandis qu'il ne nous restait pas beaucoup de temps...).
+
+Ces implémentations semblent fonctionner correctement car elles passent nos jeux de test et rendent bien les résultats attendus. En outre, nous surveillons la fuite de mémoire en exécutant explicitement \textbf{valgrind --leak-check=full} pour chaque test afin d'assurer que \textit{nos implémentations} ne posent pas ce genre de problème.
+
+\section{Points délicats}
+Il y a deux parties qui nous ont pris du temps pour finir, ce sont:
+\begin{enumerate}
+\item Chercher le comportement \textit{correct} des fonctions de manipulation de la chaîne de caractères, surtout répondre à la question: le caractère nul \verb$`\0'$ est-il compté dans $n$ caractères qu'on doit lire ou écrire ?
+\item Deviner le cycle de vie d'un programme d'utilisateur exécuté sous NACHOS.
+\end{enumerate}
+
+Pour résoudre le premier problème, à l'aide de la commande $man$ sous Linux, nous avons écrit les jeux de test avec les fonctions similaires en C telles que $strncpy$, $fgets$, $fputs$... En variant la taille de la chaîne source et la taille du buffer utilisé, nous avons constaté le comportement de ces fonctions dans plusieurs cas différents.
+
+Nous avons enfin décidé que: soit n le nombre de caractères maximum qu'une fonction peut traiter, en tout cas cette fonction doit traiter au plus $n-1$ caractères et réserver toujours une place pour le caractère de terminaison \verb$`\0'$. Ainsi, \verb$`\0'$ ne sera pas compté comme caractère de la chaîne source. Cela permet aussi de garantir la sécurité du système car les chaînes de caractères traitées par nos fonctions entrées/sorties se terminent toujours par \verb$`\0'$.
+
+Quant au deuxième problème, cela prend du temps pour que nous trouvions la routine \verb$__start$ qui initialise le programme d'utilisateur en appelant successivement $main()$ et puis $Exit(0)$ à la sortie de $main()$. Pour que cette routine puisse fonctionner correctement, il nous fallait implémenter l'appel système $Exit()$ qui prend en compte la valeur retournée par $main()$ et appelle explicitement $Halt()$ pour arrêter la machine. A l'aide des commentaires dans le code source fourni et des messages de debug rendus en exécutant \texttt{nachos -d m}, nous arrivons enfin à remplacer l'instruction \texttt{move \$4 \$0} par \texttt{move \$4 \$2} pour que la valeur de retour de $main()$ sera l'argument $arg1$ de $Exit()$.
+
+D'ailleurs, nous avons rencontré aussi un petit problème concernant la taille de la chaîne suffisant pour stocker un int de 4 bytes. Comme 13 caractères semblent suffire pour 11 chiffres, le symbole moins et le \verb$`\0'$, nous avons décider d'y allouer 16 caractères. Cependant cela reste toujours une question de l'efficacité.
+
+\section{Limitations}
+Quelques avantages de notre implémentation:
+\begin{itemize}
+\item Simple et bien commentée
+\item Suit l'implémentation des fonctions similaires en C
+\item Fonctionne!
+\end{itemize}
+
+Quelques inconvénients:
+\begin{itemize}
+\item L'efficacité en question, en raison de l'algorithme non optimisé.
+\end{itemize}
+
+\section{Tests}
+Comme le but de ce devoir est de mettre en place un système d'entrée/sortie, la plupart des tests qu'on doit réaliser sont de mettre en entrée un caractère ou une chaîne de caractères et de vérifier la sortie (l'affichage).
+
+Vous trouverez donc dans le répertoire \verb$./test$ les tests correspondent aux appels systèmes $PutChar$, $GetChar$, $PutString$, $GetString$, $PutInt$, $GetInt$ qui peuvent être lancés directement depuis le répertoire \verb$code$ avec la commande \texttt{./userprog/nachos -x /test/nom\_du\_test}
+
+Le stress test pourra être réalisé explicitement sur le test $getstring.C$ qui utilise les deux fonctions de manipulation de string $PutString$ et $GetString$ avec un buffer. Pour ce fait, nous avons fait comme suit:
+
+\begin{enumerate}
+\item Générer un fichier texte de taille très grande (ie. avec la commande \texttt{base64 /udev/random | head -c 10000000 > /tmp/input.txt})
+\item Augmenter la taille du buffer dans $getstring.c$
+\item Lancer le test depuis code: \texttt{./userprog/nachos -x test/getstring < /tmp/input.txt}
+\end{enumerate}
+
+Les résultats reçus sont tous corrects par rapport à ceux qu'on attend.
+\end{document}
+
