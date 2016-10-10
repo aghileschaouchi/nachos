@@ -1,3 +1,4 @@
+#ifdef CHANGED
 #include <syscall.h>
 
 int main() {
@@ -9,3 +10,4 @@ int main() {
     PutChar('\n');
     Halt();
 }
+#endif // CHANGED

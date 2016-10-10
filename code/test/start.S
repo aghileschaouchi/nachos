@@ -33,7 +33,11 @@
 	.ent	__start
 __start:
 	jal	main
+#ifdef CHANGED
 	move	$4,$2	 /* save the return value of main() in r4 */
+#else
+        move    $4,$0
+#endif // CHANGED
 	jal	Exit	 /* this should be exit(*return value of main()*) */
 	.end __start
 

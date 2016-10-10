@@ -1,3 +1,4 @@
+#ifdef CHANGED
 #include <syscall.h>
 
 int main() {
@@ -11,10 +12,11 @@ int main() {
     PutString("n2 = ");
     PutInt(n2);
     PutChar('\n');
-    
+
     //output attendu:
     //n1 = 1234567
     //n2 = -85698
 
     Halt();
 }
+#endif // CHANGED
