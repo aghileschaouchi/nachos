@@ -1,12 +1,11 @@
 #include <syscall.h>
 
 int main() {
-  int n;
-  PutString("Test de GetInt : \n");
-  PutString("Donner un nombre entier : \n");
-  GetInt(&n);
-  PutString("Le nombre est : ");
-  PutInt(n);
-  PutChar('\n');
-  Halt();
+    int n;
+    PutString("Saisir un entier (signé): ");
+    GetInt(&n);
+    PutString("L'entier saisi est: ");
+    PutInt(n);
+    PutChar('\n');
+    Halt();
 }
