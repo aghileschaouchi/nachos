@@ -10,16 +10,21 @@ int
 do_ThreadCreate(int f, int arg){
   //Création d'un nouveau thread qu'on lancera dans l'espace utilisateur
   Thread *thread = new Thread("newThread");
-  thread -> Start((VoidFunctionPtr)f, &arg);
   //On sauvegarde l'argument et la fonction a faire passer au thread dans une structure a fin de les faire passer a StartUserThread
   struct thread_args *t_args = (thread_args*)malloc(sizeof(struct thread_args));
   t_args -> f = f;
   t_args -> arg = arg;
   //Faire passer le thread en utilisateur
-  StartUserThread(t_args);
+  thread -> Start(StartUserThread, t_args);
+
   //On renvoyer le status de thread crée
   return 0;
   //return thread -> status;
+}
+//Pour l'espace d'adressage il ne faut rien faire ! (currentThread -> space) cet adresse est partager par tous les thread
+void
+do_ThreadExit(){
+  currentThread -> Finish();
 }
 
 static void StartUserThread(void *schmurtz){

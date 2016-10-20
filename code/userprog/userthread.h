@@ -6,5 +6,6 @@
 #include "system.h"
 
 extern int do_ThreadCreate(int f, int arg);
+void do_ThreadExit();
 static void StartUserThread(void *schmurtz);
 #endif //CHANGED
