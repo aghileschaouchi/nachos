@@ -31,10 +31,7 @@ class AddrSpace:dontcopythis
     // before jumping to user code
 
     void SaveState ();		// Save/restore address space-specific
-    void RestoreState ();	// info on a context switch
-#ifdef CHANGED
-    int AllocateUserStack();
-#endif //CHANGED
+    void RestoreState ();	// info on a context switch 
 
   private:
       TranslationEntry * pageTable;	// Assume linear page table translation
