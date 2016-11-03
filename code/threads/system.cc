@@ -39,10 +39,12 @@ Machine *machine;		// user program memory and registers
 PostOffice *postOffice;
 #endif
 
+
 #ifdef CHANGED
 #ifdef USER_PROGRAM
 SynchConsole *synchconsole;
 #endif
+
 #endif
 
 // External definition, to allow us to take a pointer to this function

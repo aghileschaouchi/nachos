@@ -26,6 +26,7 @@
 #include "syscall.h"
 #ifdef CHANGED
 #include "synchconsole.h"
+#include "userthread.h"
 #endif // CHANGED
 
 //----------------------------------------------------------------------
@@ -195,6 +196,24 @@ ExceptionHandler(ExceptionType which) {
 
                     free(from);
 
+                    break;
+                }
+
+	    case SC_ThreadCreate: //working on it!
+                {
+		     DEBUG('s', "ThreadCreate\n");
+		     //récupérer la valeur de retour stockée dans r4 (la fonction f dans ce cas la)
+		     int arg = machine->ReadRegister(5),
+		       //r5 contient l'argument arg nécessaire à la création du thread
+		       f = machine->ReadRegister(4);
+		     do_ThreadCreate(f, arg);
+		     break;
+                }
+
+		case SC_ThreadExit:
+                {
+                    DEBUG('s', "ThreadExit\n");
+                    do_ThreadExit();
                     break;
                 }
 #endif // CHANGED

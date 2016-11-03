@@ -197,3 +197,13 @@ AddrSpace::RestoreState ()
     machine->pageTable = pageTable;
     machine->pageTableSize = numPages;
 }
+
+#ifdef CHANGED
+int
+AddrSpace::AllocateUserStack(){
+  DEBUG ('a', "Initializing stack register to 0x%x\n",
+	 numPages * PageSize - 256);
+  return numPages * PageSize - 256;
+}
+
+#endif //CHANGED

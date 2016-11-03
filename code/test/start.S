@@ -109,6 +109,24 @@ GetInt:
 	syscall
 	j	$31
 	.end GetInt
+
+	.globl ThreadCreate
+	.ent	ThreadCreate
+
+ThreadCreate:
+	addiu $2,$0,SC_ThreadCreate
+	syscall
+	j	$31
+	.end ThreadCreate
+
+	.globl ThreadExit
+	.ent	ThreadExit
+
+ThreadExit:
+	addiu $2,$0,SC_ThreadExit
+	syscall
+	j	$31
+	.end ThreadExit
 	
 #endif // CHANGED
 	.globl Halt
