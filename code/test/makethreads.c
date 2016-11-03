@@ -8,13 +8,14 @@ void print(char c) {
         PutChar(c + i);
     }
     PutChar('\n');
+    ThreadExit();
 }
 
 int main() {//working on it!
   char c = 'X';
   //appel de ThreadCreate avec la fonction print qui fait des PutChar
   int ret =ThreadCreate(print, c);
-  ThreadExit();
+  
   
   //le thread principale ne doit pas se terminer
   while(1);
