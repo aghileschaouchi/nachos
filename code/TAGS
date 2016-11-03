@@ -174,6 +174,9 @@ int main(4,37
 test/halt.c,13
 main 16,496
 
+test/makethreads.c,15
+int main(4,37
+
 test/matmult.c,81
 #define Dim 12,274
 int A[A16,367
@@ -470,10 +473,10 @@ FileSystem *fileSystem;fileSystem27,865
 SynchDisk *synchDisk;synchDisk31,912
 Machine *machine;machine35,1006
 PostOffice *postOffice;postOffice39,1085
-SynchConsole *synchconsole;synchconsole44,1152
-TimerInterruptHandler 70,2204
-Initialize 88,2934
-Cleanup 206,5830
+SynchConsole *synchconsole;synchconsole45,1153
+TimerInterruptHandler 72,2206
+Initialize 90,2936
+Cleanup 208,5832
 
 threads/thread.cc,412
 #define STACK_FENCEPOST 28,1012
@@ -502,13 +505,14 @@ DebugInit 34,1234
 DebugIsEnabled 45,1539
 DEBUG 61,1984
 
-userprog/addrspace.cc,182
+userprog/addrspace.cc,221
 SwapHeader 33,1284
 AddrSpace::AddrSpace 63,2719
 AddrSpace::~AddrSpace 132,5115
 AddrSpace::InitRegisters 151,5746
 AddrSpace::SaveState 182,6816
 AddrSpace::RestoreState 195,7190
+AddrSpace::AllocateUserStack(203,7316
 
 userprog/bitmap.cc,299
 #define BitsInByte 13,480
@@ -551,6 +555,14 @@ void SynchConsole::SynchPutChar(31,659
 int SynchConsole::SynchGetChar(36,750
 void SynchConsole::SynchPutString(41,839
 void SynchConsole::SynchGetString(49,983
+
+userprog/userthread.cc,180
+struct thread_args{thread_args4,40
+  int f;thread_args::f5,60
+  int arg;thread_args::arg6,69
+do_ThreadCreate(10,88
+do_ThreadExit(26,793
+static void StartUserThread(30,842
 
 bin/coff.h,1296
 struct filehdr 5,72
@@ -1268,8 +1280,8 @@ userprog/addrspace.h,216
 #define ADDRSPACE_H14,529
 #define UserStacksAreaSize	20,618
 class AddrSpace:AddrSpace22,683
-      TranslationEntry * pageTable;AddrSpace::pageTable37,1156
-    unsigned int numPages;AddrSpace::numPages39,1248
+      TranslationEntry * pageTable;AddrSpace::pageTable40,1216
+    unsigned int numPages;AddrSpace::numPages42,1308
 
 userprog/bitmap.h,180
 #define BITMAP_H16,580
@@ -1348,3 +1360,5 @@ ThreadRoot:ThreadRoot391,8781
 SWITCH:SWITCH421,9498
 ThreadRoot:ThreadRoot471,11314
 SWITCH:SWITCH507,12161
+
+userprog/userthread.h,0

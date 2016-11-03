@@ -1,0 +1,19 @@
+#ifdef CHANGED
+#include <syscall.h>
+
+int main() {//working on it!
+  
+  DEBUG ('t', "Entering makethreads\n");
+  
+  Thread *t = new Thread ("forked thread");
+  
+  t->Start (SimpleThread, (void*) 1);
+  //SimpleThread (0);
+
+  while(1){
+    PutChar('A');
+  }
+  //Halt();
+
+}
+#endif // CHANGED
