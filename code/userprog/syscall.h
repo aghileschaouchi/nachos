@@ -150,9 +150,6 @@ void PutInt (int n);
 void GetInt (int *n);
 int ThreadCreate(void f(void *arg), void *arg);
 void ThreadExit(void);
-
-int ThreadCreate(void f(void *arg), void *arg);
-void ThreadExit(void);
 #endif // CHANGED
 
 #endif // IN_USER_MODE
