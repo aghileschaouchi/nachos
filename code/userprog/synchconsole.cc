@@ -6,6 +6,12 @@
 static Semaphore *readAvail;
 static Semaphore *writeDone;
 
+static Semaphore *Sem_PutChar;
+static Semaphore *Sem_GetChar;
+
+static Semaphore *Sem_PutString;
+static Semaphore *Sem_GetString;
+
 static void ReadAvailHandler(void *arg) {
     (void) arg;
     readAvail->V();
@@ -19,6 +25,13 @@ static void WriteDoneHandler(void *arg) {
 SynchConsole::SynchConsole(const char *in, const char *out) {
     readAvail = new Semaphore("read avail", 0);
     writeDone = new Semaphore("write done", 0);
+    
+    Sem_PutChar = new Semaphore("only one thread on SynchPutChar", 1);
+    Sem_GetChar = new Semaphore("only one thread on SynchGetChar", 1);
+
+    Sem_PutString = new Semaphore("only one thread on SynchPutString", 1);
+    Sem_GetString = new Semaphore("only one thread on SynchGetString", 1);
+    
     console = new Console(in, out, ReadAvailHandler, WriteDoneHandler, 0);
 }
 
@@ -29,39 +42,54 @@ SynchConsole::~SynchConsole() {
 }
 
 void SynchConsole::SynchPutChar(int ch) {
-    console->PutChar(ch);
-    writeDone->P();
+  Sem_PutChar -> P();
+  
+  console->PutChar(ch);
+  writeDone->P();
+
+  Sem_PutChar -> V();
 }
 
 int SynchConsole::SynchGetChar() {
-    readAvail->P();
-    return console->GetChar();
+  Sem_GetChar -> P();
+
+  
+  readAvail->P();
+  int return_val  = console->GetChar();
+  
+  Sem_GetChar -> V();
+  return return_val;
 }
 
 void SynchConsole::SynchPutString(const char s[]) {
-    int i = 0;
-    while (s[i] != '\0') {
-        SynchPutChar(s[i]);
-        i++;
-    }
+  Sem_PutString -> P();
+  int i = 0;
+  while (s[i] != '\0') {
+    SynchPutChar(s[i]);
+    i++;
+  }
+  Sem_PutString -> V();
 }
 
 void SynchConsole::SynchGetString(char *s, int n) {
-    int i = 0;
-    char ch;
-    while (i < n - 1) {
-        ch = SynchGetChar();
-
-        if (ch == EOF)
+  Sem_GetString -> P();
+  int i = 0;
+  char ch;
+  while (i < n - 1) {
+    ch = SynchGetChar();
+    
+    if (ch == EOF)
             break;
-
-        s[i] = ch;
-        i++;
-
-        if (ch == '\n')
+    
+    s[i] = ch;
+    i++;
+    
+    if (ch == '\n')
             break;
-
-    }
-    s[i] = '\0';
+    
+  }
+  s[i] = '\0';
+  
+  Sem_GetString -> V();
 }
 #endif // CHANGED
