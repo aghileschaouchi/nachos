@@ -21,7 +21,9 @@
 #include "noff.h"
 #include "syscall.h"
 #include "new"
-
+#ifdef CHANGED
+#include "synch.h"
+#endif //CHANGED
 //----------------------------------------------------------------------
 // SwapHeader
 //      Do little endian to big endian conversion on the bytes in the 
@@ -64,7 +66,10 @@ AddrSpace::AddrSpace (OpenFile * executable)
 {
     NoffHeader noffH;
     unsigned int i, size;
-
+#ifdef CHANGED
+    //initialisation du semaphore 
+    Sem_Thread = new Semaphore("one thread", 1);
+#endif //CHANGED
     executable->ReadAt (&noffH, sizeof (noffH), 0);
     if ((noffH.noffMagic != NOFFMAGIC) &&
 	(WordToHost (noffH.noffMagic) == NOFFMAGIC))

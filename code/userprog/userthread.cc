@@ -1,22 +1,29 @@
 #ifdef CHANGED
 #include "userthread.h"
-
+#include "synch.h"
 struct thread_args{
   int f;
   int arg;
 };
+//nombres de threads
+int nb_thread = 0;
 
 int
 do_ThreadCreate(int f, int arg){
+  
+
   //Création d'un nouveau thread qu'on lancera dans l'espace utilisateur
   Thread *thread = new Thread("newThread");
+  thread -> space -> Sem_Thread -> P();
   //On sauvegarde l'argument et la fonction a faire passer au thread dans une structure a fin de les faire passer a StartUserThread
   struct thread_args *schmurtz = (thread_args*)malloc(sizeof(struct thread_args));
   schmurtz -> f = f;
   schmurtz -> arg = arg;
   //Faire passer le thread en utilisateur
   thread -> Start(StartUserThread, schmurtz);
-
+  
+  nb_thread++;
+  thread -> space ->  Sem_Thread -> V();
   //On renvoyer le status de thread crée
   return 19;
   //return thread -> status;
@@ -24,7 +31,13 @@ do_ThreadCreate(int f, int arg){
 //Pour l'espace d'adressage il ne faut rien faire ! (currentThread -> space) cet adresse est partager par tous les thread
 void
 do_ThreadExit(){
+  currentThread -> space ->  Sem_Thread -> P();
+
   currentThread -> Finish();
+  if(nb_thread == 0)
+    interrupt -> Halt();
+
+  currentThread -> space -> Sem_Thread -> V();
 }
 
 static void StartUserThread(void *schmurtz){

@@ -174,8 +174,11 @@ int main(4,37
 test/halt.c,13
 main 16,496
 
-test/makethreads.c,15
-int main(4,37
+test/makethreads.c,78
+volatile int a 3,36
+void print(4,55
+void putstring(15,185
+int main(24,293
 
 test/matmult.c,81
 #define Dim 12,274
@@ -508,11 +511,11 @@ DEBUG 61,1984
 userprog/addrspace.cc,221
 SwapHeader 33,1284
 AddrSpace::AddrSpace 63,2719
-AddrSpace::~AddrSpace 132,5115
-AddrSpace::InitRegisters 151,5746
-AddrSpace::SaveState 182,6816
-AddrSpace::RestoreState 195,7190
-AddrSpace::AllocateUserStack(203,7316
+AddrSpace::~AddrSpace 135,5231
+AddrSpace::InitRegisters 154,5862
+AddrSpace::SaveState 185,6932
+AddrSpace::RestoreState 198,7306
+AddrSpace::AllocateUserStack(206,7432
 
 userprog/bitmap.cc,299
 #define BitsInByte 13,480
@@ -528,11 +531,11 @@ BitMap::Print 139,3905
 BitMap::FetchFrom 158,4403
 BitMap::WriteBack 171,4785
 
-userprog/exception.cc,106
-UpdatePC(37,1382
-ExceptionHandler(71,2492
-copyStringFromMachine(244,8596
-copyStringToMachine(281,9724
+userprog/exception.cc,107
+UpdatePC(38,1406
+ExceptionHandler(72,2516
+copyStringFromMachine(263,9202
+copyStringToMachine(300,10330
 
 userprog/progtest.cc,256
 StartProcess(25,790
@@ -544,25 +547,30 @@ WriteDoneHandler(66,1940
 ConsoleTest(78,2300
 SynchConsoleTest(122,3417
 
-userprog/synchconsole.cc,397
+userprog/synchconsole.cc,609
 static Semaphore *readAvail;readAvail6,103
 static Semaphore *writeDone;writeDone7,132
-static void ReadAvailHandler(9,162
-static void WriteDoneHandler(14,243
-SynchConsole::SynchConsole(19,324
-SynchConsole::~SynchConsole(25,560
-void SynchConsole::SynchPutChar(31,659
-int SynchConsole::SynchGetChar(36,750
-void SynchConsole::SynchPutString(41,839
-void SynchConsole::SynchGetString(49,983
+static Semaphore *Sem_PutChar;Sem_PutChar9,162
+static Semaphore *Sem_GetChar;Sem_GetChar10,193
+static Semaphore *Sem_PutString;Sem_PutString12,225
+static Semaphore *Sem_GetString;Sem_GetString13,258
+static void ReadAvailHandler(15,292
+static void WriteDoneHandler(20,373
+SynchConsole::SynchConsole(25,454
+SynchConsole::~SynchConsole(38,983
+void SynchConsole::SynchPutChar(44,1082
+int SynchConsole::SynchGetChar(53,1217
+void SynchConsole::SynchPutString(64,1385
+void SynchConsole::SynchGetString(74,1563
 
-userprog/userthread.cc,180
+userprog/userthread.cc,203
 struct thread_args{thread_args4,40
   int f;thread_args::f5,60
   int arg;thread_args::arg6,69
-do_ThreadCreate(10,88
-do_ThreadExit(26,793
-static void StartUserThread(30,842
+int nb_thread 9,104
+do_ThreadCreate(12,128
+do_ThreadExit(32,902
+static void StartUserThread(42,1041
 
 bin/coff.h,1296
 struct filehdr 5,72
@@ -1276,12 +1284,13 @@ typedef void (*VoidNoArgFunctionPtr)VoidNoArgFunctionPtr52,1771
 class dontcopythis 88,3321
 		dontcopythis(dontcopythis::dontcopythis93,3449
 
-userprog/addrspace.h,216
+userprog/addrspace.h,277
 #define ADDRSPACE_H14,529
 #define UserStacksAreaSize	20,618
-class AddrSpace:AddrSpace22,683
-      TranslationEntry * pageTable;AddrSpace::pageTable40,1216
-    unsigned int numPages;AddrSpace::numPages42,1308
+class AddrSpace:AddrSpace26,733
+  static Semaphore *Sem_Thread;AddrSpace::Sem_Thread30,789
+      TranslationEntry * pageTable;AddrSpace::pageTable48,1333
+    unsigned int numPages;AddrSpace::numPages50,1425
 
 userprog/bitmap.h,180
 #define BITMAP_H16,580
@@ -1298,7 +1307,7 @@ userprog/synchconsole.h,105
 class SynchConsole 8,127
     Console *console;SynchConsole::console23,557
 
-userprog/syscall.h,658
+userprog/syscall.h,722
 #define SYSCALLS_H14,493
 #define USER_START_ADDRESS 18,537
 #define SC_Halt	23,675
@@ -1318,14 +1327,16 @@ userprog/syscall.h,658
 #define SC_GetString 39,973
 #define SC_PutInt 40,1000
 #define SC_GetInt 41,1027
-void Halt 61,1727
-void Exit 67,1904
-typedef int SpaceId;70,2032
-typedef int OpenFileId;93,2736
-#define ConsoleInput	101,3005
-#define ConsoleOutput	102,3028
+#define SC_ThreadCreate 42,1054
+#define SC_ThreadExit 43,1081
+void Halt 63,1781
+void Exit 69,1958
+typedef int SpaceId;72,2086
+typedef int OpenFileId;95,2790
+#define ConsoleInput	103,3059
+#define ConsoleOutput	104,3082
 
-test/start.S,433
+test/start.S,501
 __start:__start34,926
 PutChar:PutChar67,1978
 PutString:PutString75,2076
@@ -1333,18 +1344,20 @@ GetChar:GetChar83,2176
 GetString:GetString91,2274
 PutInt:PutInt99,2372
 GetInt:GetInt107,2461
-Halt:Halt116,2565
-Exit:Exit124,2644
-Exec:Exec132,2723
-Join:Join140,2802
-Create:Create148,2885
-Open:Open156,2970
-Read:Read164,3049
-Write:Write172,3130
-Close:Close180,3214
-Fork:Fork188,3296
-Yield:Yield196,3377
-__main:__main205,3520
+ThreadCreate:ThreadCreate116,2563
+ThreadExit:ThreadExit125,2679
+Halt:Halt134,2795
+Exit:Exit142,2874
+Exec:Exec150,2953
+Join:Join158,3032
+Create:Create166,3115
+Open:Open174,3200
+Read:Read182,3279
+Write:Write190,3360
+Close:Close198,3444
+Fork:Fork206,3526
+Yield:Yield214,3607
+__main:__main223,3750
 
 threads/switch.S,329
 ThreadRoot:ThreadRoot72,2105

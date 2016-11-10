@@ -26,8 +26,8 @@ SynchConsole::SynchConsole(const char *in, const char *out) {
     readAvail = new Semaphore("read avail", 0);
     writeDone = new Semaphore("write done", 0);
     
-    Sem_PutChar = new Semaphore("only one thread on SynchPutChar", 1);
-    Sem_GetChar = new Semaphore("only one thread on SynchGetChar", 1);
+    Sem_PutChar = new Semaphore("one thread on SynchPutChar", 1);
+    Sem_GetChar = new Semaphore("one thread on SynchGetChar", 1);
 
     Sem_PutString = new Semaphore("only one thread on SynchPutString", 1);
     Sem_GetString = new Semaphore("only one thread on SynchGetString", 1);
