@@ -204,11 +204,40 @@ AddrSpace::RestoreState ()
 }
 
 #ifdef CHANGED
+
+void
+AddrSpace::ClearBitMap(){
+   bitmap->Clear(bitMapIndex);
+}
+
+int
+AddrSpace::SetPage(int pageNumber){
+    DEBUG ('a', "Initializing stack register to 0x%x\n",
+	   numPages * PageSize - pageNumber*256);
+
+    //chaque thread prend une pile différente que le précedent
+    //avec un espace de 256
+    //si on est toujours dans l'epace Utilisateur 1024 on augmente le
+    //on crée plus de thread sinon on sort
+    //pour l'instant on peux executé que 4 Thread a la fois
+    
+    return numPages * PageSize - pageNumber*256;
+}
+
 int
 AddrSpace::AllocateUserStack(){
-  DEBUG ('a', "Initializing stack register to 0x%x\n",
-	 numPages * PageSize - 256);
-  return numPages * PageSize - 256;
+  //le cas ou l'un des slots est vide
+  if((bitMapIndex = bitmap -> Find()) != -1) {
+
+    return SetPage(bitMapIndex );
+
+  }
+  //le cas ou le bitmap est saturé on attend la terminaison d'un thread
+  //pour donnée son slot a un autre thread 
+  else{
+    bitMapIndex = bitmap->NumClear();
+    return SetPage(bitMapIndex );
+  }
 }
 
 #endif //CHANGED

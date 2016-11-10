@@ -23,6 +23,7 @@ do_ThreadCreate(int f, int arg){
   thread -> Start(StartUserThread, schmurtz);
   
   nb_thread++;
+  
   thread -> space ->  Sem_Thread -> V();
   //On renvoyer le status de thread crée
   return 19;
@@ -32,12 +33,16 @@ do_ThreadCreate(int f, int arg){
 void
 do_ThreadExit(){
   currentThread -> space ->  Sem_Thread -> P();
-
-  currentThread -> Finish();
-  if(nb_thread == 0)
+  
+  //vider un slot
+  currentThread -> space -> ClearBitMap();
+  
+  if(--nb_thread == 0)
     interrupt -> Halt();
+  
 
   currentThread -> space -> Sem_Thread -> V();
+  currentThread -> Finish();
 }
 
 static void StartUserThread(void *schmurtz){

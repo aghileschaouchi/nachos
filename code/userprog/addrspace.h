@@ -16,6 +16,9 @@
 #include "copyright.h"
 #include "filesys.h"
 #include "translate.h"
+#ifdef CHANGED
+#include "bitmap.h"
+#endif //CHANGED
 
 #define UserStacksAreaSize		1024	// increase this as necessary!
 
@@ -43,6 +46,9 @@ class AddrSpace:dontcopythis
     void RestoreState ();	// info on a context switch
 #ifdef CHANGED
     int AllocateUserStack();
+    //pour ACTION 2.3 2.4
+    void ClearBitMap();
+    int SetPage(int pageNumber);
 #endif //CHANGED
 
   private:
@@ -50,6 +56,12 @@ class AddrSpace:dontcopythis
     // for now!
     unsigned int numPages;	// Number of pages in the virtual 
     // address space
+#ifdef CHANGED
+    // création d'un bitmap de 4 slots 
+    volatile int bitMapIndex = 0;
+    
+    BitMap *bitmap = new BitMap(4);
+#endif //CHANGED
 };
 
 #endif // ADDRSPACE_H
