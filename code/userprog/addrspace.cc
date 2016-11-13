@@ -66,11 +66,15 @@ AddrSpace::AddrSpace (OpenFile * executable)
 {
     NoffHeader noffH;
     unsigned int i, size;
+    
 #ifdef CHANGED
     //initialisation du semaphore 
     Sem_Thread = new Semaphore("one thread", 1);
-    bitmap = new BitMap(4);
+    
+    //Initialisation du BitMap de 4(NbrMaxthread == 4) slots
+    bitmap = new BitMap(NbrMaxThread);
 #endif //CHANGED
+    
     executable->ReadAt (&noffH, sizeof (noffH), 0);
     if ((noffH.noffMagic != NOFFMAGIC) &&
 	(WordToHost (noffH.noffMagic) == NOFFMAGIC))
@@ -207,12 +211,14 @@ AddrSpace::RestoreState ()
 #ifdef CHANGED
 
 void
-AddrSpace::ClearBitMap(){
+AddrSpace::ClearBitMap()
+{
    bitmap->Clear(bitMapIndex);
 }
 
 int
-AddrSpace::SetPage(int slotNumber){
+AddrSpace::SetPage(int slotNumber)
+{
     DEBUG ('a', "Initializing stack register to 0x%x\n",
 	   numPages * PageSize - slotNumber*256);
 
@@ -221,12 +227,13 @@ AddrSpace::SetPage(int slotNumber){
     //si on est toujours dans l'epace Utilisateur 1024 on augmente le
     //on crée plus de thread sinon on sort
     //pour l'instant on peux executé que 4 Thread a la fois
-    
+    printf("\n ---> %d \n", slotNumber*256);
     return numPages * PageSize - slotNumber*256;
 }
 
 int
-AddrSpace::AllocateUserStack(){
+AddrSpace::AllocateUserStack()
+{
   //le cas ou l'un des slots est vide
   if((bitMapIndex = bitmap -> Find()) != -1) {
 
@@ -235,10 +242,12 @@ AddrSpace::AllocateUserStack(){
   }
   //le cas ou le bitmap est saturé on attend la terminaison d'un thread
   //pour donnée son slot a un autre thread 
-  else{
-    bitMapIndex = bitmap->NumClear();
+  else {
+    while(bitMapIndex == -1 )
+      bitMapIndex = bitmap->NumClear();
     return SetPage(bitMapIndex );
   }
+    
 }
 
 #endif //CHANGED

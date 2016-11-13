@@ -23,6 +23,10 @@
 #define UserStacksAreaSize		1024	// increase this as necessary!
 
 #ifdef CHANGED
+#define NbrMaxThread                     4      
+#endif //CHANGED
+
+#ifdef CHANGED
 class Semaphore;
 #endif //CHANGED
 
@@ -57,7 +61,7 @@ class AddrSpace:dontcopythis
     unsigned int numPages;	// Number of pages in the virtual 
     // address space
 #ifdef CHANGED
-    // création d'un bitmap de 4 slots 
+    // création d'un bitmap  
     volatile int bitMapIndex = 0;
     
     BitMap *bitmap ;

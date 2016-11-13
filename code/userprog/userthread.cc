@@ -15,18 +15,22 @@ do_ThreadCreate(int f, int arg,int r){
 
   //Création d'un nouveau thread qu'on lancera dans l'espace utilisateur
   Thread *thread = new Thread("newThread");
+  
   thread -> space -> Sem_Thread -> P();
+  
   //On sauvegarde l'argument et la fonction a faire passer au thread dans une structure a fin de les faire passer a StartUserThread
   struct thread_args *schmurtz = (thread_args*)malloc(sizeof(struct thread_args));
   schmurtz -> f = f;
   schmurtz -> arg = arg;
   schmurtz -> r = r;
+  
   //Faire passer le thread en utilisateur
   thread -> Start(StartUserThread, schmurtz);
   
   nb_thread++;
   
   thread -> space ->  Sem_Thread -> V();
+  
   //On renvoyer le status de thread crée
   return 19;
   //return thread -> status;
@@ -42,8 +46,8 @@ do_ThreadExit(){
   if(--nb_thread == 0)
     interrupt -> Halt();
   
-
   currentThread -> space -> Sem_Thread -> V();
+  
   currentThread -> Finish();
 }
 
@@ -74,7 +78,6 @@ static void StartUserThread(void *schmurtz){
   // allocated the stack; but subtract off a bit, to make sure we don't
   // accidentally reference off the end!
   machine->WriteRegister (StackReg, currentThread -> space -> AllocateUserStack());
-  
   
   machine -> Run();
   

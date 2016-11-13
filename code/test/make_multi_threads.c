@@ -12,7 +12,6 @@ putchar(char ch){
   for(i ; i < 5 ;i++){
   PutChar(ch);
   }
-  //PutString("\n nombre d'occurence de 'a' ");
   PutChar(i-1+'0');
   PutChar('\n');
 
