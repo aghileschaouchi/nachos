@@ -174,6 +174,11 @@ int main(4,37
 test/halt.c,13
 main 16,496
 
+test/make_multi_threads.c,54
+void putstring(4,37
+putchar(10,109
+int main(22,290
+
 test/makethreads.c,78
 volatile int a 3,36
 void print(4,55
@@ -508,14 +513,16 @@ DebugInit 34,1234
 DebugIsEnabled 45,1539
 DEBUG 61,1984
 
-userprog/addrspace.cc,221
-SwapHeader 33,1284
-AddrSpace::AddrSpace 63,2719
-AddrSpace::~AddrSpace 135,5231
-AddrSpace::InitRegisters 154,5862
-AddrSpace::SaveState 185,6932
-AddrSpace::RestoreState 198,7306
-AddrSpace::AllocateUserStack(206,7432
+userprog/addrspace.cc,283
+SwapHeader 35,1334
+AddrSpace::AddrSpace 65,2769
+AddrSpace::~AddrSpace 138,5308
+AddrSpace::InitRegisters 157,5939
+AddrSpace::SaveState 188,7009
+AddrSpace::RestoreState 201,7383
+AddrSpace::ClearBitMap(210,7511
+AddrSpace::SetPage(215,7575
+AddrSpace::AllocateUserStack(229,8041
 
 userprog/bitmap.cc,299
 #define BitsInByte 13,480
@@ -564,13 +571,13 @@ void SynchConsole::SynchPutString(64,1385
 void SynchConsole::SynchGetString(74,1563
 
 userprog/userthread.cc,203
-struct thread_args{thread_args4,40
-  int f;thread_args::f5,60
-  int arg;thread_args::arg6,69
-int nb_thread 9,104
-do_ThreadCreate(12,128
-do_ThreadExit(32,902
-static void StartUserThread(42,1041
+struct thread_args{thread_args4,58
+  int f;thread_args::f5,78
+  int arg;thread_args::arg6,87
+int nb_thread 9,122
+do_ThreadCreate(12,146
+do_ThreadExit(34,965
+static void StartUserThread(48,1228
 
 bin/coff.h,1296
 struct filehdr 5,72
@@ -1284,13 +1291,15 @@ typedef void (*VoidNoArgFunctionPtr)VoidNoArgFunctionPtr52,1771
 class dontcopythis 88,3321
 		dontcopythis(dontcopythis::dontcopythis93,3449
 
-userprog/addrspace.h,277
+userprog/addrspace.h,377
 #define ADDRSPACE_H14,529
-#define UserStacksAreaSize	20,618
-class AddrSpace:AddrSpace26,733
-  static Semaphore *Sem_Thread;AddrSpace::Sem_Thread30,789
-      TranslationEntry * pageTable;AddrSpace::pageTable48,1333
-    unsigned int numPages;AddrSpace::numPages50,1425
+#define UserStacksAreaSize	23,670
+class AddrSpace:AddrSpace30,786
+  Semaphore *Sem_Thread;AddrSpace::Sem_Thread34,842
+      TranslationEntry * pageTable;AddrSpace::pageTable55,1460
+    unsigned int numPages;AddrSpace::numPages57,1552
+    volatile int bitMapIndex AddrSpace::bitMapIndex61,1691
+    BitMap *bitmap AddrSpace::bitmap63,1730
 
 userprog/bitmap.h,180
 #define BITMAP_H16,580
@@ -1336,28 +1345,28 @@ typedef int OpenFileId;95,2790
 #define ConsoleInput	103,3059
 #define ConsoleOutput	104,3082
 
-test/start.S,501
+test/start.S,502
 __start:__start34,926
-PutChar:PutChar67,1978
-PutString:PutString75,2076
-GetChar:GetChar83,2176
-GetString:GetString91,2274
-PutInt:PutInt99,2372
-GetInt:GetInt107,2461
-ThreadCreate:ThreadCreate116,2563
-ThreadExit:ThreadExit125,2679
-Halt:Halt134,2795
-Exit:Exit142,2874
-Exec:Exec150,2953
-Join:Join158,3032
-Create:Create166,3115
-Open:Open174,3200
-Read:Read182,3279
-Write:Write190,3360
-Close:Close198,3444
-Fork:Fork206,3526
-Yield:Yield214,3607
-__main:__main223,3750
+PutChar:PutChar68,1987
+PutString:PutString76,2085
+GetChar:GetChar84,2185
+GetString:GetString92,2283
+PutInt:PutInt100,2381
+GetInt:GetInt108,2470
+ThreadCreate:ThreadCreate117,2572
+ThreadExit:ThreadExit126,2703
+Halt:Halt135,2819
+Exit:Exit143,2898
+Exec:Exec151,2977
+Join:Join159,3056
+Create:Create167,3139
+Open:Open175,3224
+Read:Read183,3303
+Write:Write191,3384
+Close:Close199,3468
+Fork:Fork207,3550
+Yield:Yield215,3631
+__main:__main224,3774
 
 threads/switch.S,329
 ThreadRoot:ThreadRoot72,2105

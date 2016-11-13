@@ -4,7 +4,7 @@
 void putstring(char* arg) {
   
   PutString(arg);
-  ThreadExit();
+
 }
 void
 putchar(char ch){
@@ -15,7 +15,7 @@ putchar(char ch){
   //PutString("\n nombre d'occurence de 'a' ");
   PutChar(i-1+'0');
   PutChar('\n');
-  ThreadExit();
+
 }
 
 
@@ -31,8 +31,7 @@ int main() {
 
   ///le thread principale ne doit pas se terminer
   while(1);
-  
-  //Halt();
+
 
 }
 #endif // CHANGED

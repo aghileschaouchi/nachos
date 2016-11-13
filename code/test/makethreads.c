@@ -9,7 +9,7 @@ void print(char c) {
   }
   PutChar('\n');
   a = 1;
-  ThreadExit();
+  //ThreadExit();
 }
 
 void putstring(char* arg) {
@@ -17,7 +17,7 @@ void putstring(char* arg) {
   PutString(arg);
   PutChar('\n');
   a = 1;
-  ThreadExit();
+  //ThreadExit();
 }
 
 

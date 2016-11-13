@@ -69,6 +69,7 @@ AddrSpace::AddrSpace (OpenFile * executable)
 #ifdef CHANGED
     //initialisation du semaphore 
     Sem_Thread = new Semaphore("one thread", 1);
+    bitmap = new BitMap(4);
 #endif //CHANGED
     executable->ReadAt (&noffH, sizeof (noffH), 0);
     if ((noffH.noffMagic != NOFFMAGIC) &&
@@ -211,9 +212,9 @@ AddrSpace::ClearBitMap(){
 }
 
 int
-AddrSpace::SetPage(int pageNumber){
+AddrSpace::SetPage(int slotNumber){
     DEBUG ('a', "Initializing stack register to 0x%x\n",
-	   numPages * PageSize - pageNumber*256);
+	   numPages * PageSize - slotNumber*256);
 
     //chaque thread prend une pile différente que le précedent
     //avec un espace de 256
@@ -221,7 +222,7 @@ AddrSpace::SetPage(int pageNumber){
     //on crée plus de thread sinon on sort
     //pour l'instant on peux executé que 4 Thread a la fois
     
-    return numPages * PageSize - pageNumber*256;
+    return numPages * PageSize - slotNumber*256;
 }
 
 int

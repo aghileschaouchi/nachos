@@ -4,12 +4,13 @@
 struct thread_args{
   int f;
   int arg;
+  int r;//il va contien l'adresse de la fonction ThreadExit
 };
 //nombres de threads
 int nb_thread = 0;
 
 int
-do_ThreadCreate(int f, int arg){
+do_ThreadCreate(int f, int arg,int r){
   
 
   //Création d'un nouveau thread qu'on lancera dans l'espace utilisateur
@@ -19,6 +20,7 @@ do_ThreadCreate(int f, int arg){
   struct thread_args *schmurtz = (thread_args*)malloc(sizeof(struct thread_args));
   schmurtz -> f = f;
   schmurtz -> arg = arg;
+  schmurtz -> r = r;
   //Faire passer le thread en utilisateur
   thread -> Start(StartUserThread, schmurtz);
   
@@ -58,6 +60,9 @@ static void StartUserThread(void *schmurtz){
   
   // Initial program counter -- must be location of "Start"
   machine->WriteRegister (PCReg, thread -> f);
+  
+  //Affecter a l'adresse de retour du Threadd l'adresse de la fonction ThreadExit
+  machine->WriteRegister(31,thread -> r);
   
   // Need to also tell MIPS where next instruction is, because
   // of branch delay possibility

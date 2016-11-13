@@ -115,9 +115,10 @@ GetInt:
 
 ThreadCreate:
 	addiu $2,$0,SC_ThreadCreate
+        addiu $6,$0,ThreadExit
 	syscall
-	j	$31
-	.end ThreadCreate
+        j	$31
+        .end ThreadCreate
 
 	.globl ThreadExit
 	.ent	ThreadExit
