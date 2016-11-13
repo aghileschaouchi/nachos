@@ -227,7 +227,7 @@ AddrSpace::SetPage(int slotNumber)
     //si on est toujours dans l'epace Utilisateur 1024 on augmente le
     //on crée plus de thread sinon on sort
     //pour l'instant on peux executé que 4 Thread a la fois
-    printf("\n ---> %d \n", slotNumber*256);
+    
     return numPages * PageSize - slotNumber*256;
 }
 
