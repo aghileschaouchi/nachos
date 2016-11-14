@@ -17,7 +17,17 @@
 #include "filesys.h"
 #include "translate.h"
 
+#ifdef CHANGED
+#include "bitmap.h"
+#endif //CHANGED
+
 #define UserStacksAreaSize		1024	// increase this as necessary!
+
+#ifdef CHANGED
+#define NB_MAX_THREAD                     4      
+class Semaphore;
+#endif //CHANGED
+
 
 class AddrSpace:dontcopythis
 {
@@ -34,6 +44,8 @@ class AddrSpace:dontcopythis
     void RestoreState ();	// info on a context switch
 #ifdef CHANGED
     int AllocateUserStack();
+    //pour ACTION 2.3 2.4
+    void ClearBitMap();
 #endif //CHANGED
 
   private:
@@ -41,6 +53,12 @@ class AddrSpace:dontcopythis
     // for now!
     unsigned int numPages;	// Number of pages in the virtual 
     // address space
+#ifdef CHANGED
+    // création d'un bitmap
+    BitMap *bitmap;
+    // Thread semaphore
+    Semaphore *thread_sem;
+#endif //CHANGED
 };
 
 #endif // ADDRSPACE_H

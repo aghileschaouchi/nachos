@@ -1,0 +1,89 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{fullpage}
+\usepackage[utf8]{inputenc}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{listings}
+\usepackage[french]{babel}
+\usepackage[cyr]{aeguill}
+
+\def\dollar{\$}
+
+\setlength{\parindent}{2em}
+\setlength{\parskip}{1em}
+
+\newcommand{\quotes}[1]{``#1''}
+
+\begin{document}
+
+\begin{titlepage}
+\centering
+{\scshape\LARGE Université de Bordeaux \par}
+{\scshape\Large Master 1 Informatique \par}
+\vspace{3cm}
+
+{\Huge\bfseries Devoir Système d'Exploitation \par}
+\vspace{0.5cm}
+{\Large\itshape Rapport 2: NACHOS Multithreading \par}
+
+\vfill
+réalisé par \par
+Quoc-Nghia \textsc{NGUYEN} \par
+Aghiles \textsc{CHAOUCHI} \par
+Nadhir \textsc{HOUARI} \par
+\vfill
+
+{\large 14 novembre 2016\par}
+
+\end{titlepage}
+
+\section{Bilan}
+Le but de ce deuxième devoir est d'implémenter un mécanisme qui permet aux programmes utilisateurs de créer et manipuler des threads \textit{utilisateur} Nachos au moyen des appels système qui utiliseront des threads \textit{noyau} pour propulser les threads \textit{utilisateur}. Notre réalisation se divise donc en deux parties:
+
+\begin{enumerate}
+\item Implémenter les appels système $ThreadCreate$ et $ThreadExit$ qui servent à créer et détruire un thread utilisateur en profitant de l'implémentation des classes $Thread$ et $AddrSpace$ fournies dans le code source de Nachos. Assurer que le programme utilisateur est capable de créer et manipuler multiple threads à la fois.
+\item Modifier et améliorer l'implémentation des entrées/sorties pour que les threads (y compris le thread initial) puissent partager une même console.
+\end{enumerate}
+
+Notre réalisation semble fonctionner correctement car elle passe nos jeux de test et rend bien les résultats attendus. En outre, nous surveillons la fuite de mémoire en exécutant explicitement \textbf{valgrind --leak-check=full} pour chaque test afin d'assurer que nos modifications ne posent pas ce genre de problème.
+
+Cependant, nous n'arrivons pas à finir la dernière partie (bonus) sur les sémaphores au niveau des programmes utilisateurs faute du temps.
+
+\section{Points délicats}
+Les problèmes cités ci-dessous sont ceux qui nous ont pris du temps pour régler et que nous trouvons les plus intéressants dans ce projet.
+
+\subsection{Appeler StartUserThread(void *schmurtz) en passant plus d'un argument}
+Le fait que \verb$Thread::Start(VoidFunctionPtr func, void *arg)$ ne prend que 2 arguments pour déclencher $StartUserThread(arg)$ nous a forcé de créer une structure $struct\ thread\_args$ pour pouvoir passer à la fois la fonction $f$ et son argument $arg$ à la fonction $StartUserThread$.
+\begin{lstlisting}[language=C]
+struct thread_args {
+    int f; //la fonction
+    int arg; //son argument
+    int r; //le pointeur vers ThreadExit
+};
+\end{lstlisting}
+
+\subsection{Multi-Thread, ThreadExit et la terminaison de Nachos}
+Premièrement, comme la zone d'adressage pour les piles des threads utilisateurs ($UserStacksAreaSize$) est prédéfinie à 1024 octets, on a décidé qu'il y aura au plus 4 threads (256 octets alloués pour chacun) exécutés à la fois.
+
+Deuxièmement, dans \textbf{userthread.cc}, on a déclaré un compteur $int\ nb\_thread$ pour tenir compte du nombre des threads utilisateurs créés. Sa valeur initiale est 1 (car le thread initial est compté) et est incrémentée de 1 chaque fois qu'un thread est créé. Pour tout thread arrive à la fin (au bout du $ThreadExit$), $nb\_thread$ sera décrémenté de 1 et s'il est égal à 0, l'appel système $Halt$ sera déclenché pour terminer le programme Nachos.
+
+Troisièmement, afin d'assurer l'allocation de la zone mémoire pour les threads, on a profité des classes $Bitmap$ et $Semaphore$. En ajoutant un bitmap de taille 4 à la classe $AddrSpace$, on peut mémoriser la disponibilité de toutes les zone d'adressage afin de déterminer une zone libre. Pour chaque nouveau thread créé, un \textbf{id} qui est aussi l'indice de la case libre du bitmap sera lui attribué. Ceci permet de libérer la zone mémoire correspondante quand le thread arrive à sa fin. 
+
+Si jamais toutes les cases du bitmap sont occupées, grâce à un sémaphore $Thread\_Sem$ dont la valeur initiale est 4, on peut empêcher la création des threads jusqu'à ce que au moins une case du bitmap soit libérée.
+
+\subsection{Terminaison automatique d'un thread}
+Pour éviter d'appeler explicitement l'appel système $ThreadExit$ à la fin de tous les threads, nous avons trouvé une façon:
+\begin{enumerate}
+\item Passer l'adresse de $ThreadExit$ comme 3è argument de l'appel système $ThreadCreate$ au niveau d'assemblage ($addiu\ \$6,\$0,ThreadExit$). Cela sera stocké dans l'attribut \textbf{r} de la structure $thread\_args$ mentionnée ci-dessus.
+\item Mettre \verb$thread_args->r$ dans le registre 31 et cela devient l'adresse de retour de la fonction du thread. Comme ça chaque fois qu'un thread se termine, il va appeler $ThreadExit$ implicitement.
+\end{enumerate}
+
+
+\section{Limitations}
+Notre implémentation ne permet pas d'effectuer l'opération $PutString$ et $GetString$ de façon atomique! 
+
+\section{Tests}
+Vous trouverez donc dans le répertoire \verb$./test$ les tests \verb$tp2_*$ qui peuvent être lancés directement depuis le répertoire \verb$code$ avec la commande \texttt{./userprog/nachos -x /test/tp2\_nom\_du\_test}
+\end{document}
+

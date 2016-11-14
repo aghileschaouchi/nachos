@@ -198,21 +198,25 @@ ExceptionHandler(ExceptionType which) {
 
                     break;
                 }
-
-	    case SC_ThreadCreate: //working on it!
+                case SC_ThreadCreate:
                 {
-		     DEBUG('s', "ThreadCreate\n");
-		     //récupérer la valeur de retour stockée dans r4 (la fonction f dans ce cas la)
-		     int arg = machine->ReadRegister(5),
-		       //r5 contient l'argument arg nécessaire à la création du thread
-		       f = machine->ReadRegister(4);
-		     do_ThreadCreate(f, arg);
-		     break;
-                }
+                    DEBUG('s', "ThreadCreate\n");
+                    
+                    //récupérer f, arg et ThreadExit depuis r4, r5, r6
+                    int f = machine->ReadRegister(4);
+                    int arg = machine->ReadRegister(5);
+                    int e = machine->ReadRegister(6);
 
-		case SC_ThreadExit:
+                    int r = do_ThreadCreate(f, arg, e);
+                    //stocker le dans r2 comme valeur retournée de la fonction
+                    machine->WriteRegister(2, r);
+
+                    break;
+                }
+                case SC_ThreadExit:
                 {
                     DEBUG('s', "ThreadExit\n");
+
                     do_ThreadExit();
                     break;
                 }

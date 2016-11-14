@@ -22,6 +22,9 @@
 #include "syscall.h"
 #include "new"
 
+#ifdef CHANGED
+#include "synch.h"
+#endif //CHANGED
 //----------------------------------------------------------------------
 // SwapHeader
 //      Do little endian to big endian conversion on the bytes in the 
@@ -64,7 +67,15 @@ AddrSpace::AddrSpace (OpenFile * executable)
 {
     NoffHeader noffH;
     unsigned int i, size;
-
+    
+#ifdef CHANGED
+    //Initialisation du BitMap de 4(NB_MAX_THREAD == 4) slots
+    bitmap = new BitMap(NB_MAX_THREAD);
+    
+    //initialise sémaphore
+    thread_sem = new Semaphore("Pas de débordement", NB_MAX_THREAD);
+#endif //CHANGED
+    
     executable->ReadAt (&noffH, sizeof (noffH), 0);
     if ((noffH.noffMagic != NOFFMAGIC) &&
 	(WordToHost (noffH.noffMagic) == NOFFMAGIC))
@@ -135,6 +146,10 @@ AddrSpace::~AddrSpace ()
   // delete pageTable;
   delete [] pageTable;
   // End of modification
+#ifdef CHANGED
+  delete thread_sem;
+  delete bitmap;
+#endif // CHANGED
 }
 
 //----------------------------------------------------------------------
@@ -199,11 +214,31 @@ AddrSpace::RestoreState ()
 }
 
 #ifdef CHANGED
+
+void
+AddrSpace::ClearBitMap() {
+    bitmap->Clear(currentThread->getId());
+    //signaler qu'une place est dispo
+    thread_sem->V();
+}
+
 int
-AddrSpace::AllocateUserStack(){
-  DEBUG ('a', "Initializing stack register to 0x%x\n",
-	 numPages * PageSize - 256);
-  return numPages * PageSize - 256;
+AddrSpace::AllocateUserStack() {
+    //attendre jusqu'a ce qu'une place soit disponible
+    thread_sem->P();
+    
+    int id = bitmap -> Find();
+    
+    ASSERT(id != -1);
+    
+    currentThread->setId(id);
+    
+    //Chaque thread a une pile différente que celle du précedent.
+    //Avec un espace de 256 octets pour chaque thread, pour l'instant
+    //on ne peut exécuter que 4 threads à la fois pour assurer que
+    //l'espace utilisateur UserStacksAreaSize (1024) ne sera pas débordé.
+
+    return numPages * PageSize - id * 256;
 }
 
 #endif //CHANGED
