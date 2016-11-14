@@ -7,7 +7,8 @@ struct thread_args {
     int arg;
     int r; //il va contien l'adresse de la fonction ThreadExit
 };
-//nombres de threads (y compris le thread initial)
+
+//nombre de threads (y compris le thread initial)
 int nb_thread = 1;
 
 int
@@ -18,7 +19,8 @@ do_ThreadCreate(int f, int arg, int r) {
     if (thread == NULL) //la création du thread a échoué
         return -1;
 
-    //On sauvegarde l'argument et la fonction a faire passer au thread dans une structure a fin de les faire passer a StartUserThread
+    //On sauvegarde l'argument et la fonction à faire passer au thread 
+    //dans une structure a fin de les faire passer a StartUserThread
     struct thread_args *schmurtz = (thread_args*) malloc(sizeof (struct thread_args));
     schmurtz -> f = f;
     schmurtz -> arg = arg;
@@ -32,7 +34,8 @@ do_ThreadCreate(int f, int arg, int r) {
 
     return 0;
 }
-//Pour l'espace d'adressage il ne faut rien faire ! (currentThread -> space) cet adresse est partager par tous les thread
+//Pour l'espace d'adressage il ne faut rien faire ! 
+//(currentThread -> space) cette adresse est partagée par tous les threads
 
 void
 do_ThreadExit() {
