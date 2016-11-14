@@ -115,7 +115,7 @@ GetInt:
 
 ThreadCreate:
 	addiu $2,$0,SC_ThreadCreate
-        addiu $6,$0,ThreadExit
+        addiu $6,$0,ThreadExit //Pointer vers ThreadExit = 3eme argument de ThreadCreate
 	syscall
         j	$31
         .end ThreadCreate

@@ -113,6 +113,18 @@ class Thread:dontcopythis
 	printf ("%s, ", name);
     }
 
+#ifdef CHANGED
+
+    void setId(int i) {
+        id = i;
+    }
+    
+    int getId(){
+        return id;
+    }
+    
+#endif // CHANGED
+    
   private:
     // some of the private data for this class is listed above
 
@@ -123,6 +135,12 @@ class Thread:dontcopythis
     ThreadStatus status;	// ready, running or blocked
     const char *name;
 
+#ifdef CHANGED
+
+    int id;
+
+#endif // CHANGED
+    
     void StackAllocate (VoidFunctionPtr func, void *arg);
     // Allocate a stack for thread.
     // Used internally by Start()

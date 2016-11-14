@@ -21,6 +21,7 @@
 #include "noff.h"
 #include "syscall.h"
 #include "new"
+
 #ifdef CHANGED
 #include "synch.h"
 #endif //CHANGED
@@ -68,11 +69,11 @@ AddrSpace::AddrSpace (OpenFile * executable)
     unsigned int i, size;
     
 #ifdef CHANGED
-    //initialisation du semaphore 
-    Sem_Thread = new Semaphore("one thread", 1);
+    //Initialisation du BitMap de 4(NB_MAX_THREAD == 4) slots
+    bitmap = new BitMap(NB_MAX_THREAD);
     
-    //Initialisation du BitMap de 4(NbrMaxthread == 4) slots
-    bitmap = new BitMap(NbrMaxThread);
+    //initialise sémaphore
+    thread_sem = new Semaphore("Pas de débordement", NB_MAX_THREAD);
 #endif //CHANGED
     
     executable->ReadAt (&noffH, sizeof (noffH), 0);
@@ -145,6 +146,10 @@ AddrSpace::~AddrSpace ()
   // delete pageTable;
   delete [] pageTable;
   // End of modification
+#ifdef CHANGED
+  delete thread_sem;
+  delete bitmap;
+#endif // CHANGED
 }
 
 //----------------------------------------------------------------------
@@ -211,43 +216,29 @@ AddrSpace::RestoreState ()
 #ifdef CHANGED
 
 void
-AddrSpace::ClearBitMap()
-{
-   bitmap->Clear(bitMapIndex);
+AddrSpace::ClearBitMap() {
+    bitmap->Clear(currentThread->getId());
+    //signaler qu'une place est dispo
+    thread_sem->V();
 }
 
 int
-AddrSpace::SetPage(int slotNumber)
-{
-    DEBUG ('a', "Initializing stack register to 0x%x\n",
-	   numPages * PageSize - slotNumber*256);
-
-    //chaque thread prend une pile différente que le précedent
-    //avec un espace de 256
-    //si on est toujours dans l'epace Utilisateur 1024 on augmente le
-    //on crée plus de thread sinon on sort
-    //pour l'instant on peux executé que 4 Thread a la fois
+AddrSpace::AllocateUserStack() {
+    //attendre jusqu'a ce qu'une place soit disponible
+    thread_sem->P();
     
-    return numPages * PageSize - slotNumber*256;
-}
-
-int
-AddrSpace::AllocateUserStack()
-{
-  //le cas ou l'un des slots est vide
-  if((bitMapIndex = bitmap -> Find()) != -1) {
-
-    return SetPage(bitMapIndex );
-
-  }
-  //le cas ou le bitmap est saturé on attend la terminaison d'un thread
-  //pour donnée son slot a un autre thread 
-  else {
-    while(bitMapIndex == -1 )
-      bitMapIndex = bitmap->NumClear();
-    return SetPage(bitMapIndex );
-  }
+    int id = bitmap -> Find();
     
+    ASSERT(id != -1);
+    
+    currentThread->setId(id);
+    
+    //Chaque thread a une pile différente que celle du précedent.
+    //Avec un espace de 256 octets pour chaque thread, pour l'instant
+    //on ne peut exécuter que 4 threads à la fois pour assurer que
+    //l'espace utilisateur UserStacksAreaSize (1024) ne sera pas débordé.
+
+    return numPages * PageSize - id * 256;
 }
 
 #endif //CHANGED

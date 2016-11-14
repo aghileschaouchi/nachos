@@ -21,6 +21,11 @@ public:
 
 private:
     Console *console;
+
+    Semaphore *Sem_PutChar;
+    Semaphore *Sem_GetChar;
+    Semaphore *Sem_PutString;
+    Semaphore *Sem_GetString;
 };
 #endif // SYNCHCONSOLE_H
 #endif // CHANGED

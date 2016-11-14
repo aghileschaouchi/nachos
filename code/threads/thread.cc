@@ -25,7 +25,6 @@
 #endif
 
 
-
 #define STACK_FENCEPOST 0xdeadbeef	// this is put at the top of the
 					// execution stack, for detecting 
 					// stack overflows
@@ -44,6 +43,9 @@ Thread::Thread (const char *threadName)
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;
+#ifdef CHANGED
+    id = -1;
+#endif //CHANGED
 #ifdef USER_PROGRAM
     if (currentThread)
 	// Inherit space from father

@@ -6,12 +6,6 @@
 static Semaphore *readAvail;
 static Semaphore *writeDone;
 
-static Semaphore *Sem_PutChar;
-static Semaphore *Sem_GetChar;
-
-static Semaphore *Sem_PutString;
-static Semaphore *Sem_GetString;
-
 static void ReadAvailHandler(void *arg) {
     (void) arg;
     readAvail->V();
@@ -26,8 +20,8 @@ SynchConsole::SynchConsole(const char *in, const char *out) {
     readAvail = new Semaphore("read avail", 0);
     writeDone = new Semaphore("write done", 0);
     
-    Sem_PutChar = new Semaphore("one thread on SynchPutChar", 1);
-    Sem_GetChar = new Semaphore("one thread on SynchGetChar", 1);
+    Sem_PutChar = new Semaphore("only one thread on SynchPutChar", 1);
+    Sem_GetChar = new Semaphore("only one thread on SynchGetChar", 1);
 
     Sem_PutString = new Semaphore("only one thread on SynchPutString", 1);
     Sem_GetString = new Semaphore("only one thread on SynchGetString", 1);
@@ -39,6 +33,10 @@ SynchConsole::~SynchConsole() {
     delete console;
     delete writeDone;
     delete readAvail;
+    delete Sem_GetChar;
+    delete Sem_PutChar;
+    delete Sem_PutString;
+    delete Sem_GetString;
 }
 
 void SynchConsole::SynchPutChar(int ch) {

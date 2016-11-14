@@ -16,6 +16,7 @@
 #include "copyright.h"
 #include "filesys.h"
 #include "translate.h"
+
 #ifdef CHANGED
 #include "bitmap.h"
 #endif //CHANGED
@@ -23,10 +24,7 @@
 #define UserStacksAreaSize		1024	// increase this as necessary!
 
 #ifdef CHANGED
-#define NbrMaxThread                     4      
-#endif //CHANGED
-
-#ifdef CHANGED
+#define NB_MAX_THREAD                     4      
 class Semaphore;
 #endif //CHANGED
 
@@ -34,10 +32,6 @@ class Semaphore;
 class AddrSpace:dontcopythis
 {
   public:
-#ifdef CHANGED
-  Semaphore *Sem_Thread;
-#endif //CHANGED
-
     AddrSpace (OpenFile * executable);	// Create an address space,
     // initializing it with the program
     // stored in the file "executable"
@@ -52,7 +46,6 @@ class AddrSpace:dontcopythis
     int AllocateUserStack();
     //pour ACTION 2.3 2.4
     void ClearBitMap();
-    int SetPage(int slotNumber);
 #endif //CHANGED
 
   private:
@@ -61,10 +54,10 @@ class AddrSpace:dontcopythis
     unsigned int numPages;	// Number of pages in the virtual 
     // address space
 #ifdef CHANGED
-    // création d'un bitmap  
-    volatile int bitMapIndex = 0;
-    
-    BitMap *bitmap ;
+    // création d'un bitmap
+    BitMap *bitmap;
+    // Thread semaphore
+    Semaphore *thread_sem;
 #endif //CHANGED
 };
 
