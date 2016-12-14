@@ -24,6 +24,7 @@
 
 #ifdef CHANGED
 #include "synch.h"
+static void ReadAtVirtual(OpenFile* executable, int virtualaddr, int numBytes, int position, TranslationEntry* pageTable, unsigned numPages);
 #endif //CHANGED
 //----------------------------------------------------------------------
 // SwapHeader
@@ -102,7 +103,9 @@ AddrSpace::AddrSpace (OpenFile * executable)
     pageTable = new TranslationEntry[numPages];
     for (i = 0; i < numPages; i++)
       {
-	  pageTable[i].physicalPage = i;	// for now, phys page # = virtual page #
+#ifdef CHANGED
+        pageTable[i].physicalPage = i+1;	// for now, phys page # = virtual page #
+#endif // CHANGED
 	  pageTable[i].valid = TRUE;
 	  pageTable[i].use = FALSE;
 	  pageTable[i].dirty = FALSE;
@@ -116,17 +119,27 @@ AddrSpace::AddrSpace (OpenFile * executable)
       {
 	  DEBUG ('a', "Initializing code segment, at 0x%x, size 0x%x\n",
 		 noffH.code.virtualAddr, noffH.code.size);
-	  executable->ReadAt (&(machine->mainMemory[noffH.code.virtualAddr]),
-			      noffH.code.size, noffH.code.inFileAddr);
+#ifdef CHANGED
+        ReadAtVirtual(executable, noffH.code.virtualAddr, noffH.code.size,
+                noffH.code.inFileAddr, pageTable, numPages);
+#else
+        executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr]),
+                noffH.code.size, noffH.code.inFileAddr);
+#endif // CHANGED
       }
     if (noffH.initData.size > 0)
       {
 	  DEBUG ('a', "Initializing data segment, at 0x%x, size 0x%x\n",
 		 noffH.initData.virtualAddr, noffH.initData.size);
+#ifdef CHANGED
+        ReadAtVirtual(executable, noffH.initData.virtualAddr, noffH.initData.size,
+                noffH.initData.inFileAddr, pageTable, numPages);
+#else
 	  executable->ReadAt (&
 			      (machine->mainMemory
 			       [noffH.initData.virtualAddr]),
 			      noffH.initData.size, noffH.initData.inFileAddr);
+#endif // CHANGED
       }
 
     DEBUG ('a', "Area for stacks at 0x%x, size 0x%x\n",
@@ -240,5 +253,26 @@ AddrSpace::AllocateUserStack() {
 
     return numPages * PageSize - id * 256;
 }
+
+static void ReadAtVirtual(OpenFile* executable, int virtualaddr, int numBytes, int position, TranslationEntry* pageTable, unsigned numPages) {
+    char buffer[numBytes];
+    int nb_write = 0;
+
+    TranslationEntry *old_pageTable = machine->pageTable;
+    unsigned int old_pageTableSize = machine->pageTableSize;
+    
+    machine->pageTable = pageTable;
+    machine->pageTableSize = numPages;
+    
+    executable->ReadAt(buffer, numBytes, position);
+    while (nb_write < numBytes) {
+        machine->WriteMem(virtualaddr + nb_write, 1, buffer[nb_write]);
+        nb_write++;
+    }
+    
+    machine->pageTable = old_pageTable;
+    machine->pageTableSize = old_pageTableSize;
+}
+
 
 #endif //CHANGED
