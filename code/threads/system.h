@@ -54,6 +54,10 @@ extern PostOffice *postOffice;
 extern int copyStringFromMachine(int from, char *to, unsigned size);
 extern int copyStringToMachine(char *from, int to, unsigned size);
 #ifdef USER_PROGRAM
+//PageProvider
+#include "pageprovider.h"
+extern PageProvider *pageprovider;
+//synchconsole
 #include "synchconsole.h"
 extern SynchConsole *synchconsole;
 #endif

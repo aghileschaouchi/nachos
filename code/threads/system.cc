@@ -33,6 +33,9 @@ SynchDisk *synchDisk;
 
 #ifdef USER_PROGRAM		// requires either FILESYS or FILESYS_STUB
 Machine *machine;		// user program memory and registers
+#ifdef CHANGED
+PageProvider* pageprovider;
+#endif //CHANGED
 #endif
 
 #ifdef NETWORK
@@ -92,6 +95,14 @@ Initialize (int argc, char **argv)
     bool randomYield = FALSE;
 
 #ifdef USER_PROGRAM
+       //Initialisation du PageProvider ici car pour la machine il faut qu'un seul PageProvider
+#ifdef CHANGED
+    
+    pageprovider = new PageProvider((int)(MemorySize/PageSize));
+    //MemorySize/PageSize découpage de la mémoire en morceau(Pages)<=> NumPages(NumPages n'est pas visible ici)
+    
+#endif //CHANGED
+    
     bool debugUserProg = FALSE;	// single step user program
 #endif
 #ifdef FILESYS_NEEDED
@@ -220,6 +231,7 @@ Cleanup ()
 
 #ifdef CHANGED
     delete synchconsole;
+    delete pageprovider;
 #endif // CHANGED
     
     delete machine;

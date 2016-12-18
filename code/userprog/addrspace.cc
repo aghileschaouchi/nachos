@@ -72,12 +72,14 @@ AddrSpace::AddrSpace (OpenFile * executable)
 #ifdef CHANGED
     //Initialisation du BitMap de 4(NB_MAX_THREAD == 4) slots
     bitmap = new BitMap(NB_MAX_THREAD);
+    //pageprovider = new PageProvider(numPages);
     
     //initialise sémaphore
     thread_sem = new Semaphore("Pas de débordement", NB_MAX_THREAD);
 #endif //CHANGED
     
     executable->ReadAt (&noffH, sizeof (noffH), 0);
+    //ReadAtVirtual(executable, noffH.noffMagic, sizeof(noffH.noffMagic), 0, pageTable, numPages);
     if ((noffH.noffMagic != NOFFMAGIC) &&
 	(WordToHost (noffH.noffMagic) == NOFFMAGIC))
 	SwapHeader (&noffH);
@@ -104,8 +106,10 @@ AddrSpace::AddrSpace (OpenFile * executable)
     for (i = 0; i < numPages; i++)
       {
 #ifdef CHANGED
-        pageTable[i].physicalPage = i+1;	// for now, phys page # = virtual page #
-#endif // CHANGED
+	
+	pageTable[i].physicalPage = pageprovider-> GetEmptyPage();
+	
+#endif //CHANGED
 	  pageTable[i].valid = TRUE;
 	  pageTable[i].use = FALSE;
 	  pageTable[i].dirty = FALSE;
@@ -160,6 +164,11 @@ AddrSpace::~AddrSpace ()
   delete [] pageTable;
   // End of modification
 #ifdef CHANGED
+  //Libérer les pages 
+  unsigned int i;
+  for (i = 0; i < numPages; i++){
+    pageprovider-> ReleasePage( pageTable[i].physicalPage );
+  }
   delete thread_sem;
   delete bitmap;
 #endif // CHANGED
