@@ -5,7 +5,7 @@
 
 #include "copyright.h"
 #include "bitmap.h"
-//Partie I terminer
+
 class Semaphore;
 
 class PageProvider:dontcopythis

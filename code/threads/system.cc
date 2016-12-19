@@ -7,6 +7,7 @@
 
 #include "copyright.h"
 #include "system.h"
+#include "synch.h"
 #include <locale.h>
 #ifdef __GLIBC__
 #include <malloc.h>
@@ -22,6 +23,11 @@ Interrupt *interrupt;		// interrupt status
 Statistics *stats;		// performance metrics
 Timer *timer;			// the hardware timer device,
 					// for invoking context switches
+#ifdef CHANGED
+//Number of process
+int numberProc;
+Semaphore *sem_proc = new Semaphore("Process", 1);
+#endif //CHANGED
 
 #ifdef FILESYS_NEEDED
 FileSystem *fileSystem;
@@ -97,10 +103,12 @@ Initialize (int argc, char **argv)
 #ifdef USER_PROGRAM
        //Initialisation du PageProvider ici car pour la machine il faut qu'un seul PageProvider
 #ifdef CHANGED
+    //C'est ici qu'on initialise le PageProvider propre à l'exécution de Nachos
+    pageprovider = new PageProvider((int) (MemorySize / PageSize));
     
-    pageprovider = new PageProvider((int)(MemorySize/PageSize));
     //MemorySize/PageSize découpage de la mémoire en morceau(Pages)<=> NumPages(NumPages n'est pas visible ici)
-    
+    //Initialisation du nombre de processus au debut
+    numberProc = 0;
 #endif //CHANGED
     
     bool debugUserProg = FALSE;	// single step user program
@@ -231,7 +239,9 @@ Cleanup ()
 
 #ifdef CHANGED
     delete synchconsole;
+    synchconsole = NULL;
     delete pageprovider;
+    pageprovider = NULL;
 #endif // CHANGED
     
     delete machine;
@@ -259,3 +269,20 @@ Cleanup ()
 
     Exit (0);
 }
+
+#ifdef CHANGED
+int getNumberProc(){
+  return numberProc;
+}
+
+void incNumberProc(){
+  sem_proc->P();
+  numberProc++;
+  sem_proc->V();
+}
+void decNumberProc(){
+  sem_proc->P();
+  numberProc--;
+  sem_proc->V();
+}
+#endif  //CHANGED

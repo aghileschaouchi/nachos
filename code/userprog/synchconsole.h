@@ -19,6 +19,9 @@ public:
     void SynchPutString(const char *s); // Unix fputs(3S)
     void SynchGetString(char *s, int n); // Unix fgets(3S)
 
+    //Si un thread faisait PutString, on fait un Sem_Putstring->V()
+    void MakeVIfOn(int n);
+
 private:
     Console *console;
 

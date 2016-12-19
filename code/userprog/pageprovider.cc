@@ -5,46 +5,39 @@
 #include "bitmap.h"
 #include "synch.h"
 
-PageProvider::PageProvider(int numPages)
-{
+PageProvider::PageProvider(int numPages) {
 
-  bitmap = new BitMap(numPages);
-  semPageProvider = new Semaphore("PageProvider Semaphore",1);
+    bitmap = new BitMap(numPages);
+    semPageProvider = new Semaphore("PageProvider Semaphore", numPages);
 }
 
-PageProvider::~PageProvider ()
-{
-  delete  bitmap; 
+PageProvider::~PageProvider() {
+    delete bitmap;
+    delete semPageProvider;
 }
 
 int
-PageProvider::GetEmptyPage ()
-{
-  semPageProvider -> P();
-  
-  int emptyPage = bitmap -> Find();
-  ASSERT(emptyPage != -1);
-  memset(&(machine -> mainMemory[ PageSize * emptyPage ] ),'0',PageSize );
-  
-  semPageProvider -> V();
-  return emptyPage;
-  
+PageProvider::GetEmptyPage() {
+    semPageProvider -> P();
+
+    int emptyPage = bitmap -> Find();
+    ASSERT(emptyPage != -1);
+
+    memset(&(machine -> mainMemory[ PageSize * emptyPage ]), '0', PageSize);
+
+    return emptyPage;
 }
 
 void
-PageProvider::ReleasePage (int page_nb)
-{
-  semPageProvider -> P();
+PageProvider::ReleasePage(int page_nb) {
+    bitmap -> Clear(page_nb);
 
-  bitmap -> Clear(page_nb);
-  
-  semPageProvider -> V();
+    semPageProvider -> V();
 }
 
 int
-PageProvider::NumAvailPage ()
-{
-  return bitmap -> NumClear();
+PageProvider::NumAvailPage() {
+    return bitmap -> NumClear();
 
 }
 #endif //CHANGED

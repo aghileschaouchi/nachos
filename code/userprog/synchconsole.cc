@@ -69,6 +69,12 @@ void SynchConsole::SynchPutString(const char s[]) {
   Sem_PutString -> V();
 }
 
+void
+SynchConsole::MakeVIfOn(int n){
+  for(int i = 0; i < n; i++)
+    Sem_PutString->V();
+}
+
 void SynchConsole::SynchGetString(char *s, int n) {
   Sem_GetString -> P();
   int i = 0;

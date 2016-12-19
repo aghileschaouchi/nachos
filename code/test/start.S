@@ -129,6 +129,16 @@ ThreadExit:
 	j	$31
 	.end ThreadExit
 	
+        .globl ForkExec
+	.ent	ForkExec
+
+ForkExec:
+	addiu $2,$0,SC_ForkExec
+        addiu $5,$0,Exit // On pointe vers Exit
+	syscall
+	j	$31
+	.end ForkExec
+
 #endif // CHANGED
 	.globl Halt
 	.ent	Halt

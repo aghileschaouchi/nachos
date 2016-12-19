@@ -51,8 +51,12 @@ extern PostOffice *postOffice;
 
 #ifdef CHANGED
 #define MAX_STRING_SIZE 32
+#define MAX_FILENAME_SIZE 32
 extern int copyStringFromMachine(int from, char *to, unsigned size);
 extern int copyStringToMachine(char *from, int to, unsigned size);
+extern int getNumberProc();
+extern void incNumberProc();
+extern void decNumberProc();
 #ifdef USER_PROGRAM
 //PageProvider
 #include "pageprovider.h"

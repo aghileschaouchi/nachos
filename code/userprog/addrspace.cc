@@ -70,12 +70,22 @@ AddrSpace::AddrSpace (OpenFile * executable)
     unsigned int i, size;
     
 #ifdef CHANGED
-    //Initialisation du BitMap de 4(NB_MAX_THREAD == 4) slots
+    //Initialisation d'un BitMap de 12 (NB_MAX_THREAD == 12) slots
     bitmap = new BitMap(NB_MAX_THREAD);
-    //pageprovider = new PageProvider(numPages);
-    
+
     //initialise sémaphore
     thread_sem = new Semaphore("Pas de débordement", NB_MAX_THREAD);
+    thread_sem_1 = new Semaphore("Incrementation et dec", 1);
+    //Allocation d'un tableaux de t_thread
+    buffThread = new t_thread[NB_MAX_THREAD];
+    //Initialisation du tableau
+    for (int i = 0; i < NB_MAX_THREAD; i++) {
+        buffThread[i].thread = NULL;
+        buffThread[i].on = 0;
+    }
+
+    //nombre de threads (y compris le thread initial)
+    nb_thread = 1;
 #endif //CHANGED
     
     executable->ReadAt (&noffH, sizeof (noffH), 0);
@@ -126,24 +136,18 @@ AddrSpace::AddrSpace (OpenFile * executable)
 #ifdef CHANGED
         ReadAtVirtual(executable, noffH.code.virtualAddr, noffH.code.size,
                 noffH.code.inFileAddr, pageTable, numPages);
-#else
-        executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr]),
-                noffH.code.size, noffH.code.inFileAddr);
-#endif // CHANGED
+#endif //CHANGED
       }
     if (noffH.initData.size > 0)
       {
 	  DEBUG ('a', "Initializing data segment, at 0x%x, size 0x%x\n",
 		 noffH.initData.virtualAddr, noffH.initData.size);
 #ifdef CHANGED
+	  
         ReadAtVirtual(executable, noffH.initData.virtualAddr, noffH.initData.size,
                 noffH.initData.inFileAddr, pageTable, numPages);
-#else
-	  executable->ReadAt (&
-			      (machine->mainMemory
-			       [noffH.initData.virtualAddr]),
-			      noffH.initData.size, noffH.initData.inFileAddr);
-#endif // CHANGED
+	  
+#endif //CHANGED
       }
 
     DEBUG ('a', "Area for stacks at 0x%x, size 0x%x\n",
@@ -161,17 +165,21 @@ AddrSpace::~AddrSpace ()
 {
   // LB: Missing [] for delete
   // delete pageTable;
-  delete [] pageTable;
-  // End of modification
 #ifdef CHANGED
   //Libérer les pages 
   unsigned int i;
   for (i = 0; i < numPages; i++){
-    pageprovider-> ReleasePage( pageTable[i].physicalPage );
+    
+    machine-> pageprovider-> ReleasePage( pageTable[i].physicalPage );
   }
   delete thread_sem;
+  delete thread_sem_1;
+  delete buffThread;
   delete bitmap;
 #endif // CHANGED
+  delete [] pageTable;
+  // End of modification
+
 }
 
 //----------------------------------------------------------------------
@@ -263,6 +271,109 @@ AddrSpace::AllocateUserStack() {
     return numPages * PageSize - id * 256;
 }
 
+/**
+ * Methode qui met le thread créé dans le tableau de threads
+ * @param thread
+ * @param i indice
+ */
+void
+AddrSpace::PutBuffThread(Thread *thread, int i) {
+    thread_sem_1 -> P();
+  buffThread[i].thread = thread;
+    thread_sem_1 -> V();
+}
+
+/**
+ * Parcourir le tableau de threads, chercher l'emplacement du thread qu'on veut terminer et le mettre a NULL
+ * @param thread
+ * @param nb_thread
+ * @return 
+ */
+int
+AddrSpace::PutNullInBuff(Thread *thread, int nb_thread) {
+    int i;
+  //On parcourt tous les threads du processus courant, on cherche le thread courant et on met son adresse à NULL
+  for(i = 0; i < nb_thread; i++)
+    if(buffThread[i].thread == thread){
+      buffThread[i].thread = NULL;
+            return 0;
+        }
+    return -1;
+}
+
+/**
+ * Parcourir le tableau de threads du processus courant et appeler Finish() sur chacun
+ */
+void
+AddrSpace::ExitAllThread(int nb_thread) {
+    int i;
+    thread_sem_1 -> P();
+  //printf("<<<<<<%d>>>>>",currentThread->space->getNbThread()-1);
+  for(i = 0; i < nb_thread; i++)
+    if(buffThread[i].thread != NULL){
+      // printf("addrese:%p", buffThread[i]);
+      buffThread[i].thread -> Finish();
+        }
+    thread_sem_1 -> V();
+}
+
+/**
+ * Renvoyer le nombre de threads du processus courant
+ * @return 
+ */
+int
+AddrSpace::getNbThread() {
+    return nb_thread;
+}
+
+/**
+ * Incrémenter le nombre de threads
+ */
+void
+AddrSpace::incNbThread() {
+    thread_sem_1 -> P();
+    nb_thread++;
+    //printf("<<<<<<%d>>>>>",currentThread->space->getNbThread()-1);
+    thread_sem_1 -> V();
+}
+
+/**
+ * Décrementer le nombre de threads
+ */
+void
+AddrSpace::decrNbThread() {
+    thread_sem_1 -> P();
+    nb_thread--;
+    //printf("<<<<<<%d>>>>>",currentThread->space->getNbThread()-1);
+    thread_sem_1 -> V();
+}
+//TP3 Bonus 2
+int
+AddrSpace::OnPutString(Thread* thread){
+  for(int i = 0; i < nb_thread; i++)
+    if(buffThread[i].thread == thread){
+      buffThread[i].on = 1;
+      return 0;
+    }
+}
+
+int
+AddrSpace::LeftPutString(Thread* thread){
+  for(int i = 0; i < nb_thread; i++)
+    if(buffThread[i].thread == thread){
+      buffThread[i].on = 0;
+      return 0;
+    }
+}
+int
+AddrSpace::NbOnPutString(){
+  int n(0);
+  for(int i = 0; i < nb_thread; i++)
+    if(buffThread[i].thread != NULL && buffThread[i].on == 1)
+      n++;
+  return n;
+}
+
 static void ReadAtVirtual(OpenFile* executable, int virtualaddr, int numBytes, int position, TranslationEntry* pageTable, unsigned numPages) {
     char buffer[numBytes];
     int nb_write = 0;
@@ -270,6 +381,7 @@ static void ReadAtVirtual(OpenFile* executable, int virtualaddr, int numBytes, i
     TranslationEntry *old_pageTable = machine->pageTable;
     unsigned int old_pageTableSize = machine->pageTableSize;
     
+  //échange pour notre traitement
     machine->pageTable = pageTable;
     machine->pageTableSize = numPages;
     
@@ -279,6 +391,7 @@ static void ReadAtVirtual(OpenFile* executable, int virtualaddr, int numBytes, i
         nb_write++;
     }
     
+  //Restoration 
     machine->pageTable = old_pageTable;
     machine->pageTableSize = old_pageTableSize;
 }

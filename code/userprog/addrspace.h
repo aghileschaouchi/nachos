@@ -21,11 +21,19 @@
 #include "bitmap.h"
 #endif //CHANGED
 
-#define UserStacksAreaSize		1024	// increase this as necessary!
+#define UserStacksAreaSize		1024*4	// increase this as necessary!
 
 #ifdef CHANGED
-#define NB_MAX_THREAD                     4      
+#define NB_MAX_THREAD                     4*4
+
 class Semaphore;
+class Thread;
+//Struct contenant un pointeur vers un thread et une variable 'ON' qui peut être soit 0 soit 1 selon le fait que le thread est en train de faire un PutString ou pas
+//Pour chaque processus, correspond un AddrSpace et donc un tableau de t_thread de taille NB_MAX_THREAD, chaque processus peut allouer un tel nombre de threads, qui seront stockés par la suite dans ce tableau, afin de pouvoir satisfaire ce qui a été exigé dans les bonus 1 et 2
+typedef struct t_thread{
+  Thread* thread;   //Thread utilisateur
+    int on;//Est-ce que le thread est en train de faire un PutString où non (Bonus 2 du Tp3) 
+}t_thread;
 #endif //CHANGED
 
 
@@ -46,6 +54,24 @@ class AddrSpace:dontcopythis
     int AllocateUserStack();
     //pour ACTION 2.3 2.4
     void ClearBitMap();
+    //TP3 Bonus 1, mettre un thread utilisateur crée dans le tableau 
+  void PutBuffThread(Thread *thread,int i);
+  // Enlever un thread du tableau et mettre NULL à sa place
+  int PutNullInBuff(Thread *thread,int nb_thread);
+  //Appeler Finish() pour tous les threads contenus dans le tableau
+  void ExitAllThread(int nb_thread);
+  //TP3 Bonus 2, mettre la variable 'on' du thread à vrai (le thread est en train de faire un PutString)
+  int OnPutString(Thread* thread);
+  // Mettre la variable 'on' du thread à faux (le thread a fini de faire un PutString)
+  int LeftPutString(Thread* thread);
+  // Récupérer le nombre de threads qui sont en train de faire un PutString
+  int NbOnPutString();
+  // Récupérer le nombre de threads du processus courant
+  int getNbThread();
+  // Incrémenter le nombre de threads du processus courant
+  void incNbThread();
+  // Décrementer le nombre de threads du processus courant
+  void decrNbThread();
 #endif //CHANGED
 
   private:
@@ -58,6 +84,13 @@ class AddrSpace:dontcopythis
     BitMap *bitmap;
     // Thread semaphore
     Semaphore *thread_sem;
+  //Un seule thread qui décremente ou incrémente le nombre de threads
+  Semaphore *thread_sem_1;
+  //TP3 Bonus 1, chaque processus peut avoir au plus 12 thread
+  //il dispose d'un tableau de thread qui contiendra l'adresse des threads qu'on lui alloue
+  t_thread *buffThread;
+  //nombre de threads (y compris le thread initial)
+  int nb_thread;
 #endif //CHANGED
 };
 

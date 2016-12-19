@@ -27,6 +27,7 @@
 #ifdef CHANGED
 #include "synchconsole.h"
 #include "userthread.h"
+#include "userfork.h"
 #endif // CHANGED
 
 //----------------------------------------------------------------------
@@ -88,8 +89,25 @@ ExceptionHandler(ExceptionType which) {
                     DEBUG('s', "Exit\n");
                     //récupérer la valeur de retour stockée dans r4
                     int n = machine->ReadRegister(4);
-                    printf("main() returned %d\n", n);
-                    interrupt -> Halt();
+
+                    // printf("THREAD : %d", currentThread->space->getNbThread());
+                    printf("\nmain() returned %d\n", n);
+
+                    //si le nombre des processus > 0, on ne termine pas encore
+                    //notre programme
+                    if (getNumberProc() > 0) {
+                        //On decremente le nombre de processus
+                        decNumberProc();
+                        
+                        //On fait autant de Sem_Get->V() que le nombre de threads qui font PutString
+                        synchconsole->MakeVIfOn(currentThread->space->NbOnPutString());
+                        
+                        //Tous les threads du processus courant font un ThreadExit()
+                        currentThread->space->ExitAllThread(currentThread->space->getNbThread() - 1);
+
+                        currentThread -> Finish();
+                    } else
+                        interrupt -> Halt();
                     break;
                 }
                 case SC_PutChar:
@@ -111,6 +129,9 @@ ExceptionHandler(ExceptionType which) {
                     char *buf = (char*) malloc(sizeof (char)*MAX_STRING_SIZE);
                     int nb_read = 0;
 
+                    //On met 'on = 1' dans le tableau de thread car le thread courant fait un PutString
+                    currentThread->space->OnPutString(currentThread);
+
                     do {
                         //copier au plus MAX_STRING_SIZE - 1 caractères au buffer
                         nb_read = copyStringFromMachine(from, buf, MAX_STRING_SIZE);
@@ -126,6 +147,8 @@ ExceptionHandler(ExceptionType which) {
                     //libérer le buffer
                     free(buf);
 
+                    //On met 'on = 0' dans le tableau de thread car le thread courant a fini le PutString
+                    currentThread->space->LeftPutString(currentThread);
                     break;
                 }
                 case SC_GetChar:
@@ -220,6 +243,28 @@ ExceptionHandler(ExceptionType which) {
                     do_ThreadExit();
                     break;
                 }
+
+		case SC_ForkExec:
+		{
+		  DEBUG('s', "ForkExec\n");
+		  //Recuperation du nom de l'executable
+		  //l'adresse du 1er caractere de la chaine
+		  
+		  int from = machine -> ReadRegister(4);
+		  int exit = machine -> ReadRegister(5);
+		  int result;
+		  //nom de l'executable à executer
+		  char *filename = (char*) malloc(sizeof (char)*MAX_FILENAME_SIZE);
+		  //récuperation du nom de l'executable
+		  copyStringFromMachine(from, filename, MAX_FILENAME_SIZE);
+		  //DEBUG('s', filename);
+		  //on lance la fonction qui se charge d'exécuter le fichier
+		  result = do_ForkExec(filename,exit);
+		  free(filename);
+		  ASSERT(result == 0);
+		  break;
+                }
+
 #endif // CHANGED
                 default:
                 {

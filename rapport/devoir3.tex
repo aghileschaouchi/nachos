@@ -1,0 +1,80 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{fullpage}
+\usepackage[utf8]{inputenc}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{listings}
+\usepackage[french]{babel}
+\usepackage[cyr]{aeguill}
+
+\def\dollar{\$}
+
+\setlength{\parindent}{2em}
+\setlength{\parskip}{1em}
+
+\newcommand{\quotes}[1]{``#1''}
+
+\begin{document}
+
+\begin{titlepage}
+\centering
+{\scshape\LARGE Université de Bordeaux \par}
+{\scshape\Large Master 1 Informatique \par}
+\vspace{3cm}
+
+{\Huge\bfseries Devoir Système d'Exploitation \par}%%%%
+\vspace{0.5cm}
+{\Large\itshape Rapport 3: NACHOS Pagination \par}
+
+\vfill
+réalisé par \par
+Quoc-Nghia \textsc{NGUYEN} \par
+Aghiles \textsc{CHAOUCHI} \par
+Nadhir \textsc{HOUARI} \par
+\vfill
+
+{\large 19 décembre 2016\par}
+
+\end{titlepage}
+
+\section{Bilan}
+Le but de ce troisième devoir est de mettre en place un mécanisme de gestion de mémoire paginée simple au sein du système. Notre réalisation se divise en deux parties:
+
+\begin{enumerate}
+\item Créer une classe \textbf{PageProvider} qui encapsule les mécanismes de gestions des pages de mémoire physiques en profitant d'un tableau de type \textbf{BitMap}. \textbf{PageProvider} doit permettre de: (1) récupérer le numéro d'une page libre et initialisé à 0 (méthode \textit{GetEmptyPage}); (2) libérer une page obtenue par \textit{GetEmptyPage} (méthode \textit{ReleasePage}); (3) demander combien de pages restent disponibles ? (méthode \textit{NumAvailPage}).
+\item Implémenter l'appel système \textbf{ForkExec} qui permet de lancer un programme utilisateur dans un nouveau processus et assurer que ces processus utilisateurs fonctionnent correctement en terme d'allocation de mémoire et peuvent contenir eux-même des threads lancés avec l'appel système \textbf{ThreadCreate} qu'on a implémenté lors du dernier TP.
+\end{enumerate}
+
+Notre réalisation semble fonctionner correctement car elle passe nos jeux de test et rend bien les résultats attendus. Cependant cette fois-ci en exécutant explicitement \textbf{valgrind --leak-check=full} pour chaque test, on constate une fuite de mémoire qui aurait son origine dans la création des processus utilisateurs. Ce problème sera expliqué ultérieurement dans ce rapport.
+
+En outre, nous n'arrivons pas à finir deux derniers bonus (Action II.7 et Partie III).
+
+\section{Points délicats}
+
+Afin de pouvoir lancer plusieurs processus utilisateurs dont chacun contient plusieurs threads utilisateurs, on a augmenté les limites pour le mémoire comme suit:
+\begin{itemize}
+\item NumPhysPages = 1024
+\item UserStackArea = 1024x4
+\item NB\_MAX\_THREAD = 4x4
+\end{itemize}
+
+\subsection{PageProvider et Stratégie d'allocation des pages}
+Comme chaque machine n'a besoin d'un seul PageProvider, on a décidé d'initialiser ce dernier au niveau du système, dans la méthode \textbf{Initialize()} du fichier \textit{threads/system.cc} qui est en charge d'initialiser toutes les structures de données globales de Nachos. En plus, on a mis en place un compteur \textbf{number\_proc} qui permet de savoir il y a combien de processus qui sont lancés, afin de par exemple décider quand on peut terminer le thread noyau.
+
+La stratégie d'allocation des pages qu'on a choisi est basée sur un tableau de type BitMap dont chaque créneau correspond à une page. Tant qu'il y a des créneaux libres, autrement dit il y a des pages libres, on peut l'allouer aux demandeurs. Sinon la demande sera verrouillée par un sémaphore dont le niveau initial est \textbf{NumPhysPages} jusqu'à ce qu'une place soit disponible.
+
+\subsection{Terminaison d'un processus et celle d'un thread}
+Par convention, un processus se termine si et seulement si tous ses threads sont déjà disparus, et un programme se termine une fois que le nombre des processus lancés baisse à 0. Ainsi si jamais un processus veut s'arrêter, on se contentera donc de terminer forcément tous ses threads.
+
+Grâce au tableau \textbf{buffThread} dans \textit{AddrSpace} qui stocke tous les threads qu'on a créé, on peut faire en sorte que quand un processus s'arrête, tous ses threads utilisateurs doivent s'arrêter également en appelant \textbf{Finish()} sur chacun des threads.
+
+De façon similaire, on marque les threads stockés par un indicateur booléen (true ou false) pour savoir si un thread est en train d'utiliser \textbf{PutString}. Au bout d'un moment où un thread est terminé de façon brutale, on va appeler \textbf{V()} sur la sémaphore de PutString autant de fois que le nombre des processus qui n'a pas encore fini avec PutString pour enlever tous les verrous qu'on a mis.
+
+\section{Limitations}
+Il y a une fuite de mémoire que nous n'arrivons pas à résoudre. Cela est à l'origine dans notre implémentation de l'appel système \textbf{ForkExec} (\textit{userprog/userfork.cc:47}, l'instanciation de l'espace d'adressage du nouveau processus utilisateur). Tout essai de libérer \textit{*space} rend à un "segmentation fault".
+
+\section{Tests}
+Vous trouverez donc dans le répertoire \verb$./test$ les tests \verb$tp3_*$ qui peuvent être lancés directement depuis le répertoire \verb$code$ avec la commande \texttt{./userprog/nachos -rs 1234 -x /test/tp3\_nom\_du\_test}
+\end{document}
+
